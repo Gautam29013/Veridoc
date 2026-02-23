@@ -1,18 +1,24 @@
 import axios from "axios";
 
-const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+const api = axios.create({
+    baseURL: API_URL,
+    headers: {
+        "Content-Type": "application/json",
+    },
 });
 
-export const loginUser = (data) => API.post("/login", data);
-
-export const uploadDocument = (formData) =>
-  API.post("/upload", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
+// Add interceptor for auth tokens
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
     },
-  });
+    (error) => Promise.reject(error)
+);
 
-export const queryDocument = (data) => API.post("/query", data);
-
-export default API;
+export default api;

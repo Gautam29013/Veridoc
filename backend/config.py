@@ -18,5 +18,18 @@ CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "1000"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "200"))
 TOP_K = int(os.getenv("TOP_K", "4"))
 
+# API Configuration
+API_PORT = int(os.getenv("API_PORT", "8000"))
+API_HOST = os.getenv("API_HOST", "0.0.0.0")
+
+# Database Configuration
+MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+DATABASE_NAME = os.getenv("DATABASE_NAME", "veridoc")
+
+# Authentication Configuration
+JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-here-change-in-production")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+JWT_EXPIRATION_MINUTES = int(os.getenv("JWT_EXPIRATION_MINUTES", "1440")) # 24 hours
+
 # Logging
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
