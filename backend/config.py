@@ -21,6 +21,14 @@ TOP_K = int(os.getenv("TOP_K", "4"))
 # API Configuration
 API_PORT = int(os.getenv("API_PORT", "8000"))
 API_HOST = os.getenv("API_HOST", "0.0.0.0")
+CORS_ALLOW_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ALLOW_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4000,http://127.0.0.1:4000",
+    ).split(",")
+    if origin.strip()
+]
 
 # Database Configuration
 MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
