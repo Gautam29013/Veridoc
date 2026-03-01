@@ -5,9 +5,16 @@ from datetime import datetime
 class UserBase(BaseModel):
     email: EmailStr
     full_name: Optional[str] = None
+    picture_url: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    bio: Optional[str] = None
+    phone: Optional[str] = None
+    picture_url: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -18,6 +25,9 @@ class GoogleLogin(BaseModel):
 
 class UserResponse(UserBase):
     id: str = Field(..., alias="_id")
+    bio: Optional[str] = None
+    phone: Optional[str] = None
+    is_google_user: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
