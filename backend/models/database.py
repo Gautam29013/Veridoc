@@ -13,7 +13,7 @@ async def connect_to_mongo():
     print(f"Connected to MongoDB at {MONGODB_URL}")
 
 async def close_mongo_connection():
-    if db_connection.client:
+    if db_connection.client: 
         db_connection.client.close()
         print("MongoDB connection closed")
 

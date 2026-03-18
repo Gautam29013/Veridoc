@@ -36,15 +36,9 @@ import { Logo } from "@/components/Logo"
 import { useNavigate } from "react-router-dom"
 import { logout } from "@/services/authService"
 
-// Mock Chat History
-const chatHistory = [
-    { id: 1, title: "Analyzing medical reports...", date: "Today" },
-    { id: 2, title: "Diabetes symptoms check", date: "Yesterday" },
-    { id: 3, title: "Diet plan for hypertension", date: "2 days ago" },
-    { id: 4, title: "Vaccination schedule 2024", date: "Last week" },
-]
 
-export function AppSidebar({ onNewChat, activeChatId, onSelectChat }) {
+
+export function AppSidebar({ onNewChat, activeChatId, onSelectChat, chatHistory = [] }) {
     const navigate = useNavigate();
     const [user, setUser] = React.useState({ full_name: "User Account", email: "" });
 
