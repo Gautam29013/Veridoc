@@ -1,12 +1,26 @@
-import boto3
 import json
-import tiktoken
-from langchain.embeddings.base import Embeddings
-from langchain_chroma import Chroma
 import os
+
+import boto3
+
+try:
+    import tiktoken
+except ImportError:
+    tiktoken = None
+
+try:
+    from langchain.embeddings.base import Embeddings
+    from langchain_chroma import Chroma
+except ImportError:
+    Embeddings = object
+    Chroma = None
+
 
 class AmazonTitanEmbedding(Embeddings):
     def __init__(self, region_name="eu-west-3", model_id="amazon.titan-embed-text-v2:0"):
+        if tiktoken is None:
+            raise RuntimeError("Missing dependency: tiktoken")
+
         self.client = boto3.client("bedrock-runtime", region_name=region_name)
         self.model_id = model_id
         self.max_tokens = 8000
@@ -35,18 +49,41 @@ class AmazonTitanEmbedding(Embeddings):
                 print(f"[Warning] Skipping text #{i} due to error: {e}")
         return embeddings
 
-embeddings = AmazonTitanEmbedding()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-vector_store = Chroma(
-    collection_name="example_collection",
-    embedding_function=embeddings,
-    persist_directory=os.path.join(BASE_DIR, "chroma_vectorestore"),
-)
-
-client = boto3.client("bedrock-runtime", region_name="eu-west-3")
 MODEL_ID = "eu.amazon.nova-pro-v1:0"
+
+_vector_store = None
+_client = None
+_init_error = None
+
+
+def _initialize_services():
+    global _vector_store, _client, _init_error
+
+    if _init_error is not None:
+        return
+
+    if _vector_store is not None and _client is not None:
+        return
+
+    if Chroma is None:
+        _init_error = (
+            "Missing dependencies for Bedrock chat. Install backend chat packages "
+            "(langchain and langchain-chroma) to enable /chat endpoints."
+        )
+        return
+
+    try:
+        embeddings = AmazonTitanEmbedding()
+        _vector_store = Chroma(
+            collection_name="example_collection",
+            embedding_function=embeddings,
+            persist_directory=os.path.join(BASE_DIR, "chroma_vectorestore"),
+        )
+        _client = boto3.client("bedrock-runtime", region_name="eu-west-3")
+    except Exception as exc:
+        _init_error = str(exc)
 
 def _format_chat_history(chat_history):
     if not chat_history:
@@ -61,7 +98,11 @@ def _format_chat_history(chat_history):
     return "\n".join(formatted_messages)
 
 def get_bedrock_response(question, chat_history=None):
-    docs_from_vector_store = vector_store.similarity_search(question, k=3)
+    _initialize_services()
+    if _init_error is not None:
+        raise RuntimeError(f"Bedrock service is not ready: {_init_error}")
+
+    docs_from_vector_store = _vector_store.similarity_search(question, k=3)
     conversation_history = _format_chat_history(chat_history)
 
     prompt = f"""
@@ -98,6 +139,6 @@ def get_bedrock_response(question, chat_history=None):
         "inferenceConfig": ige_inf_params,
     }
 
-    response = client.invoke_model(modelId=MODEL_ID, body=json.dumps(ige_native_request))
+    response = _client.invoke_model(modelId=MODEL_ID, body=json.dumps(ige_native_request))
     result = json.loads(response["body"].read())
     return result["output"]["message"]["content"][0]["text"]
