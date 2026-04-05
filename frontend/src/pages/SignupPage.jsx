@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { signup, googleLogin } from "@/services/authService";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/Logo";
@@ -60,6 +60,18 @@ export default function SignupPage() {
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950 p-4 transition-colors duration-300">
+            <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="absolute top-4 left-4 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-50"
+            >
+                <Link to="/">
+                    <ArrowLeft className="h-4 w-4" />
+                    Back to Homepage
+                </Link>
+            </Button>
+
             <div className="absolute top-4 right-4 flex items-center gap-2">
                 <ThemeToggle />
             </div>
