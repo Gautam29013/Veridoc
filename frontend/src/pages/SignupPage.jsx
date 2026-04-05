@@ -10,6 +10,8 @@ import { GoogleLogin } from "@react-oauth/google";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/Logo";
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
 export default function SignupPage() {
     const [formData, setFormData] = useState({
         email: "",
@@ -144,16 +146,16 @@ export default function SignupPage() {
                             </div>
                         </div>
 
-                        <div className="flex justify-center w-full">
-                            <GoogleLogin
-                                onSuccess={handleGoogleSuccess}
-                                onError={handleGoogleError}
-                                useOneTap
-                                theme="outline"
-                                shape="pill"
-                                width="100%"
-                            />
-                        </div>
+                        {GOOGLE_CLIENT_ID ? (
+                            <div className="flex justify-center w-full">
+                                <GoogleLogin
+                                    onSuccess={handleGoogleSuccess}
+                                    onError={handleGoogleError}
+                                    theme="outline"
+                                    shape="pill"
+                                />
+                            </div>
+                        ) : null}
 
                         <div className="text-center text-sm text-muted-foreground">
                             Already have an account?{" "}

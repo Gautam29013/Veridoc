@@ -2,8 +2,11 @@ import boto3
 import json
 import tiktoken
 from langchain.embeddings.base import Embeddings
-from langchain_chroma import Chroma
+from langchain_community.vectorstores import Chroma
+from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError
 import os
+
+from backend.config import CHROMA_PERSIST_DIR
 
 class AmazonTitanEmbedding(Embeddings):
     def __init__(self, region_name="eu-west-3", model_id="amazon.titan-embed-text-v2:0"):
@@ -38,11 +41,16 @@ class AmazonTitanEmbedding(Embeddings):
 embeddings = AmazonTitanEmbedding()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PERSIST_DIRECTORY = (
+    CHROMA_PERSIST_DIR
+    if os.path.isabs(CHROMA_PERSIST_DIR)
+    else os.path.normpath(os.path.join(BASE_DIR, "..", CHROMA_PERSIST_DIR))
+)
 
 vector_store = Chroma(
     collection_name="example_collection",
     embedding_function=embeddings,
-    persist_directory=os.path.join(BASE_DIR, "chroma_vectorestore"),
+    persist_directory=PERSIST_DIRECTORY,
 )
 
 client = boto3.client("bedrock-runtime", region_name="eu-west-3")
@@ -61,7 +69,12 @@ def _format_chat_history(chat_history):
     return "\n".join(formatted_messages)
 
 def get_bedrock_response(question, chat_history=None):
-    docs_from_vector_store = vector_store.similarity_search(question, k=3)
+    try:
+        docs_from_vector_store = vector_store.similarity_search(question, k=3)
+    except Exception as exc:
+        print(f"[Warning] Vector store lookup failed: {exc}")
+        docs_from_vector_store = []
+
     conversation_history = _format_chat_history(chat_history)
 
     prompt = f"""
@@ -98,6 +111,13 @@ def get_bedrock_response(question, chat_history=None):
         "inferenceConfig": ige_inf_params,
     }
 
-    response = client.invoke_model(modelId=MODEL_ID, body=json.dumps(ige_native_request))
-    result = json.loads(response["body"].read())
-    return result["output"]["message"]["content"][0]["text"]
+    try:
+        response = client.invoke_model(modelId=MODEL_ID, body=json.dumps(ige_native_request))
+        result = json.loads(response["body"].read())
+        return result["output"]["message"]["content"][0]["text"]
+    except (NoCredentialsError, BotoCoreError, ClientError) as exc:
+        print(f"[Warning] Bedrock request failed: {exc}")
+        return "Chat is temporarily unavailable because the AI provider is not configured correctly on the server."
+    except Exception as exc:
+        print(f"[Warning] Unexpected chat failure: {exc}")
+        return "Chat is temporarily unavailable right now. Please try again later."
