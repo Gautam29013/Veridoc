@@ -1,7 +1,11 @@
 [project]
 name = "veridoc"
 version = "0.1.0"
-description = "Add your description here"
+description = """Veridoc is a full-stack application utilizing a modern stack:
+Frontend: Built with React using the Vite bundler. It uses Tailwind CSS and Shadcn UI for modern styling and component design.
+Backend: Built with Python and FastAPI, serving as the API layer.
+AI/Document Capabilities: The project focuses on "Document Analysis"."""
+
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

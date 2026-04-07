@@ -1,4 +1,4 @@
-# Veridoc - AI-Powered Document Analysis
+# Veridoc - AI-Powered RAG chatbot for organization's internal documents
 
 ## Project Structure
 - **/backend**: FastAPI server with MongoDB integration.
