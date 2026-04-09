@@ -101,7 +101,7 @@ export default function Settings() {
                                             </div>
                                             <div>
                                                 <p className="text-sm font-semibold">Privacy Policy</p>
-                                                <p className="text-xs text-muted-foreground">Learn how we handle your medical documents.</p>
+                                                <p className="text-xs text-muted-foreground">Learn how we handle your policy documents.</p>
                                             </div>
                                         </div>
                                         <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-foreground transition-colors" />

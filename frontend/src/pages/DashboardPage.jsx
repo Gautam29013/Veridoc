@@ -168,8 +168,8 @@ export default function DashboardPage() {
                                 <div className="space-y-2 max-w-md">
                                     <h2 className="text-3xl font-bold tracking-tight">How can I help you today?</h2>
                                     <p className="text-muted-foreground px-4">
-                                        Ask me anything about your medical documents, symptoms, or health trends.
-                                        Your data is encrypted and secure.
+                                        Ask me anything about Air India policies, documents, and guidelines.
+                                        Powered by RAG for accurate, source-backed answers.
                                     </p>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl px-4 mt-8 pb-32">
