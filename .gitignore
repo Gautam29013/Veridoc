@@ -22,3 +22,6 @@ vector_db/
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
+
+# Backend chroma vector store
+backend/chroma_vectorestore/
