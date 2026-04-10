@@ -1,104 +1,138 @@
-# Veridoc - AI-Powered Document Analysis
+# Veridoc — AI-Powered Document Analysis Platform
 
-## Project Structure
-- **/backend**: FastAPI server with MongoDB integration.
-- **/frontend**: React + Vite + Shadcn UI + Tailwind CSS.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![AWS Bedrock](https://img.shields.io/badge/AWS_Bedrock-FF9900?style=flat&logo=amazonaws&logoColor=white)](https://aws.amazon.com/bedrock/)
 
-## Getting Started
+**Veridoc** is a state-of-the-art Retrieval-Augmented Generation (RAG) platform designed to transform static documents into interactive knowledge bases. Leveraging AWS Bedrock's powerful language models and ChromaDB's efficient vector storage, Veridoc provides precise, context-aware answers to complex queries across your document library.
 
-### Backend Setup
-1. Navigate to `/backend`.
-2. Ensure you have `uv` installed.
-3. Run the server:
-   ```bash
-   uv run python main.py
-   ```
-   The API will be available at `http://localhost:8000`.
+---
 
-### Frontend Setup
-1. Navigate to `/frontend`.
-2. Install dependencies:
-   ```bash
-   pnpm install
-   ```
-3. Run the development server:
-   ```bash
-   pnpm dev
-   ```
-   The frontend will be available at `http://localhost:5173`.
+## ✨ Key Features
 
-## Authentication
-- Signup: `http://localhost:5173/signup`
-- Login: `http://localhost:5173/login`
-- Dashboard: `http://localhost:5173/` (Protected)
+- 🧠 **AI-Powered Insights**: Utilize AWS Bedrock (Amazon Nova Pro) for high-accuracy document comprehension.
+- 🔍 **Semantics Search**: Deep document indexing with Amazon Titan Embeddings for relevant information retrieval.
+- ⚡ **Real-time Chat**: Interactive chat interface with persistent history and context awareness.
+- 🔐 **Secure Authentication**: Robust user management with JWT-based auth and MongoDB storage.
+- 📊 **Scalable Vector Storage**: Powered by ChromaDB for lightning-fast similarity searches.
+- ☁️ **Cloud Native**: Fully containerized with Docker and ready for AWS EC2/ECR deployment.
 
+---
 
-# AWS-CICD-Deployment-with-Github-Actions
+## 🛠️ Technology Stack
 
-## 1. Login to AWS console.
+| Layer          | Technology                                                                 |
+|----------------|----------------------------------------------------------------------------|
+| **Frontend**   | React 19, Vite, Tailwind CSS, Shadcn UI, Radix UI                          |
+| **Backend**    | FastAPI, Python 3.12+, LangChain                                           |
+| **AI Models**  | AWS Bedrock (Amazon Nova Pro V1, Amazon Titan Embeddings V2)             |
+| **Databases**  | MongoDB (User Metadata), ChromaDB (Vector Store)                           |
+| **Infrastructure** | Docker, AWS (EC2, ECR), GitHub Actions (CI/CD)                         |
 
-## 2. Create IAM user for deployment
+---
 
-	#with specific access
+## 🏗️ Architecture & Workflow
 
-	1. EC2 access : It is virtual machine
+The platform follows a standard RAG (Retrieval-Augmented Generation) pipeline:
 
-	2. ECR: Elastic Container registry to save your docker image in aws
+```mermaid
+graph TD
+    subgraph "Ingestion Phase"
+        Docs[Documents] --> Processor[Text Processor]
+        Processor --> Embedder[Amazon Titan Embeddings]
+        Embedder --> Chroma[ChromaDB Vector Store]
+    end
 
+    subgraph "Query Phase"
+        User[User Query] --> Search[ChromaDB Similarity Search]
+        Search --> Context[Relevant Context]
+        Context --> LLM[Amazon Nova Pro V1]
+        User --> LLM
+        LLM --> Response[AI Response]
+    end
 
-	#Description: About the deployment
+    subgraph "Data & Auth"
+        DB[(MongoDB)] --- Auth[User Auth / History]
+    end
+```
 
-	1. Build docker image of the source code
+---
 
-	2. Push your docker image to ECR
+## 🚀 Getting Started
 
-	3. Launch Your EC2 
+### Prerequisites
 
-	4. Pull Your image from ECR in EC2
+- **Python 3.12+** (Recommended: `uv` for package management)
+- **Node.js & pnpm/npm**
+- **AWS Credentials** with Bedrock access
+- **MongoDB** instance (local or Atlas)
 
-	5. Lauch your docker image in EC2
+### 1. Project Configuration
 
-	#Policy:
+Clone the repository and set up your environment variables:
 
-	1. AmazonEC2ContainerRegistryFullAccess
+```bash
+cp .env.example .env
+# Edit .env with your AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, MONGODB_URL, etc.
+```
 
-	2. AmazonEC2FullAccess
+### 2. Backend Setup
 
-	
-## 3. Create ECR repo to store/save docker image
-    - Save the URI: 135692633208.dkr.ecr.ap-south-1.amazonaws.com/veridoc
+```bash
+cd backend
+# Install dependencies using uv
+uv run python main.py
+```
+*The API will be available at `http://localhost:8000`*
 
-	
-## 4. Create EC2 machine (Ubuntu) 
+### 3. Frontend Setup
 
-## 5. Open EC2 and Install docker in EC2 Machine:
-	
-	
-	#optinal
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+*The frontend will be available at `http://localhost:5173`*
 
-	sudo apt-get update -y
+---
 
-	sudo apt-get upgrade
-	
-	#required
+## 🚢 Deployment (AWS)
 
-	curl -fsSL https://get.docker.com -o get-docker.sh
+Veridoc is optimized for automated deployment via **GitHub Actions**.
 
-	sudo sh get-docker.sh
+### CI/CD Pipeline Overview
 
-	sudo usermod -aG docker ubuntu
+1.  **Build**: Docker images are built for both frontend and backend.
+2.  **Push**: Images are pushed to **Amazon ECR**.
+3.  **Deploy**: Self-hosted GitHub Runners on **Amazon EC2** pull the latest images and restart the services using Docker.
 
-	newgrp docker
-	
-# 6. Configure EC2 as self-hosted runner:
-    setting>actions>runner>new self hosted runner> choose os> then run command one by one
+### Required GitHub Secrets
 
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`
+- `AWS_DEFAULT_REGION`
+- `ECR_REPO`
 
-# 7. Setup github secrets:
+---
 
-   - AWS_ACCESS_KEY_ID
-   - AWS_SECRET_ACCESS_KEY
-   - AWS_DEFAULT_REGION
-   - ECR_REPO
-   
+## 📂 Project Structure
+
+```text
+├── backend/            # FastAPI Application
+│   ├── api/            # Routes (Auth, Documents, Queries)
+│   ├── models/         # Pydantic & Database Schemas
+│   ├── services/       # Bedrock & Vector Storage logic
+│   └── utils/          # Helpers & Middleware
+├── frontend/           # React Application
+│   ├── src/            # Components, Hooks, & Assets
+│   └── public/         # Static assets & Logo
+├── vector_db/          # Persistent ChromaDB storage
+└── docker/             # Docker configuration files
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
