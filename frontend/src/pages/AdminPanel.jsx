@@ -39,7 +39,7 @@ export default function AdminPanel() {
 
     const fetchDocuments = async () => {
         try {
-            const res = await api.get("/documents/list");
+            const res = await api.get("/api/v1/documents/list");
             setDocuments(res.data.documents || []);
         } catch (err) {
             console.error("Failed to fetch documents", err);
@@ -70,7 +70,7 @@ export default function AdminPanel() {
 
         try {
             // Overriding the default application/json header for multipart/form-data
-            const response = await api.post("/documents/upload", formData, {
+            const response = await api.post("/api/v1/documents/upload", formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
@@ -97,7 +97,7 @@ export default function AdminPanel() {
 
     const handleDelete = async (docId) => {
         try {
-            await api.delete(`/documents/${docId}`);
+            await api.delete(`/api/v1/documents/${docId}`);
             setDocuments(documents.filter(doc => doc._id !== docId));
             toast({
                 title: "Document Removed",

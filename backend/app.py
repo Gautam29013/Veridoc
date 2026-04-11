@@ -30,7 +30,7 @@ from backend.api.document_routes import router as document_router
 # Include routers
 app.include_router(auth_router)
 app.include_router(query_router)
-app.include_router(document_router)
+app.include_router(document_router, prefix="/api/v1")
 
 @app.get("/")
 async def root():
