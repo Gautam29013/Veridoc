@@ -21,7 +21,6 @@ PyPDF2
 python-docx
 markdown
 unidecode
-pypdf
 
 # Retrieval & Search
 rank-bm25

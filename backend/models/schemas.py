@@ -28,7 +28,6 @@ class UserResponse(UserBase):
     bio: Optional[str] = None
     phone: Optional[str] = None
     is_google_user: bool = False
-    is_admin: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
@@ -45,13 +44,3 @@ class SignupResponse(BaseModel):
 
 class TokenData(BaseModel):
     email: Optional[str] = None
-
-class DocumentResponse(BaseModel):
-    id: str = Field(..., alias="_id")
-    filename: str
-    chunk_count: int
-    uploaded_by: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-
-    class Config:
-        populate_by_name = True

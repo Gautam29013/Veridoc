@@ -35,7 +35,6 @@ async def signup(user: UserCreate):
     user_dict = user.model_dump()
     user_dict["password"] = get_password_hash(user_dict["password"])
     user_dict["_id"] = str(uuid.uuid4())
-    user_dict["is_admin"] = user.email.endswith('@airindia.com')
     user_dict["created_at"] = datetime.utcnow()
     
     await db.users.insert_one(user_dict)
@@ -87,7 +86,6 @@ async def google_auth(data: GoogleLogin):
                 "full_name": full_name,
                 "picture_url": picture_url,
                 "is_google_user": True,
-                "is_admin": email.endswith('@airindia.com'),
                 "created_at": datetime.utcnow()
             }
             await db.users.insert_one(user)
