@@ -25,12 +25,10 @@ async def shutdown_db_client():
     await close_mongo_connection()
 
 from backend.api.query_routes import router as query_router
-from backend.api.document_routes import router as document_router
 
 # Include routers
 app.include_router(auth_router)
 app.include_router(query_router)
-app.include_router(document_router)
 
 @app.get("/")
 async def root():
