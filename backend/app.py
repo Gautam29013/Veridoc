@@ -1,10 +1,17 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.api.auth_routes import router as auth_router
-from backend.models.database import connect_to_mongo, close_mongo_connection
-from backend.config import API_PORT, API_HOST, CORS_ALLOW_ORIGINS
+from api.auth_routes import router as auth_router
+from models.database import connect_to_mongo, close_mongo_connection
+from config import API_PORT, API_HOST, CORS_ALLOW_ORIGINS
 
-app = FastAPI(title="Veridoc API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await connect_to_mongo()
+    yield
+    await close_mongo_connection()
+
+app = FastAPI(title="Veridoc API", lifespan=lifespan)
 
 # Add CORS middleware
 app.add_middleware(
@@ -16,15 +23,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.on_event("startup")
-async def startup_db_client():
-    await connect_to_mongo()
 
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    await close_mongo_connection()
-
-from backend.api.query_routes import router as query_router
+from api.query_routes import router as query_router
 
 # Include routers
 app.include_router(auth_router)
@@ -33,3 +33,7 @@ app.include_router(query_router)
 @app.get("/")
 async def root():
     return {"message": "Welcome to Veridoc API"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host=API_HOST, port=API_PORT, reload=True)

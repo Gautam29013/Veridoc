@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
-from backend.api.auth_routes import verify_token
-from backend.services.document_service import document_service
+from api.auth_routes import verify_token
+from services.document_service import document_service
 
 
 router = APIRouter(prefix="/api/v1/documents", tags=["documents"])

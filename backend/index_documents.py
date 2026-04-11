@@ -2,7 +2,7 @@ import os
 import uuid
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from backend.services.bedrock_service import vector_store
+from services.bedrock_service import vector_store
 
 def index_pdfs_to_chroma(directory_path: str):
     """
