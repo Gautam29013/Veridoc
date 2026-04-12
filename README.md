@@ -97,16 +97,6 @@ pnpm dev
 
 ---
 
-## 🚢 Deployment (AWS)
-
-Veridoc is optimized for automated deployment via **GitHub Actions**.
-
-### CI/CD Pipeline Overview
-
-1.  **Build**: Docker images are built for both frontend and backend.
-2.  **Push**: Images are pushed to **Amazon ECR**.
-3.  **Deploy**: Self-hosted GitHub Runners on **Amazon EC2** pull the latest images and restart the services using Docker.
-
 ### Required GitHub Secrets
 
 - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`
