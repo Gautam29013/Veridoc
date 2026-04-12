@@ -65,7 +65,7 @@ def get_bedrock_response(question, chat_history=None):
     conversation_history = _format_chat_history(chat_history)
 
     prompt = f"""
-    You are a helpful assistant for Air India questions.
+    You are a helpful assistant for Veridoc document questions.
     Answer only from the retrieved context and the ongoing conversation.
     If the user asks a follow-up question, use the chat history to resolve references like "it", "that", "this flight", or "tell me more".
     If the answer is not supported by the context, say that clearly.
