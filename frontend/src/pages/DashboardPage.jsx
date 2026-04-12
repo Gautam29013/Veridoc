@@ -75,7 +75,7 @@ export default function DashboardPage() {
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             };
             setMessages(prev => [...prev, botResponse]);
-            
+
             // Re-fetch side bar chats
             fetchChats();
         } catch (error) {
@@ -101,7 +101,7 @@ export default function DashboardPage() {
         setActiveChatId(id);
         setMessages([]); // clear current messages while loading
         setIsFetchingHistory(true);
-        
+
         try {
             const response = await api.get(`/chat/${id}`);
             if (response.data && response.data.messages) {

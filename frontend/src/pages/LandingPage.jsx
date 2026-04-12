@@ -32,11 +32,11 @@ const LandingPage = () => {
             <section className="relative overflow-hidden pt-20 pb-20 md:pt-32 md:pb-32">
                 <div className="absolute inset-0 -z-10 bg-[radial-gradient(45%_45%_at_50%_50%,rgba(var(--primary-rgb),0.1),transparent)]"></div>
                 <div className="container mx-auto px-4 text-center">
-                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 bg-gradient-to-r from-foreground via-foreground/80 to-foreground/60 bg-clip-text text-transparent">
-                        Secure Document Verification <br className="hidden md:block" /> Powered by Intelligence
+                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent pb-2 lg:leading-tight">
+                        Enterprise RAG Application <br className="hidden md:block" /> With Zero Hallucinations
                     </h1>
-                    <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-                        Veridoc provides state-of-the-art AI-driven tools to verify, manage, and secure your most important documents with confidence.
+                    <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+                        Get instant, accurate answers sourced <strong>strictly from your verified internal documents</strong>. Empower your organization with intelligent and reliable knowledge retrieval.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Link to="/signup">

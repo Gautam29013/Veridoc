@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en-US"
+early_access: false
+
+reviews:
+  profile: "assertive"
+  high_level_summary: true
+  review_status: true
+  auto_review:
+    enabled: true
+    drafts: false
+
+  path_filters:
+    - "**/*.md"
+    - "**/*.py"
+    - "**/*.{js,jsx,ts,tsx}"
+    - "!node_modules/**"
+    - "!dist/**"
+    - "!build/**"
+    - "!venv/**"
+    - "!__pycache__/**"
+    - "!*.pyc"
+
+  path_instructions:
+    - path: "**/*.md"
+      instructions: |
+        Review documentation for clarity, correctness, and consistency.
+        Flag unclear setup steps, missing prerequisites, and inaccurate commands.
+
+  tools:
+    markdownlint:
+      enabled: true
+
+chat:
+  auto_reply: true

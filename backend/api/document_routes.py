@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
-from backend.api.auth_routes import get_current_user
-from backend.services.document_service import document_service
+from api.auth_routes import get_current_user
+from services.document_service import document_service
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
