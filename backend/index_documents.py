@@ -32,7 +32,7 @@ def index_pdfs_to_chroma(directory_path: str):
         print(f"Error while indexing: {e}")
 
 if __name__ == "__main__":
-    # Example usage: Put PDFs in backend/data/AirIndia and run this script
+    # Example usage: Put PDFs in backend/data/sample_documents and run this script
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    target_dir = os.path.join(base_dir, "data", "AirIndia")
+    target_dir = os.path.join(base_dir, "data", "sample_documents")
     index_pdfs_to_chroma(target_dir)
