@@ -168,7 +168,7 @@ export default function DashboardPage() {
                                 <div className="space-y-2 max-w-md">
                                     <h2 className="text-3xl font-bold tracking-tight">How can I help you today?</h2>
                                     <p className="text-muted-foreground px-4">
-                                        Ask me anything about Air India policies, documents, and guidelines.
+                                        Ask me anything about your uploaded policies, documents, and guidelines.
                                         Powered by RAG for accurate, source-backed answers.
                                     </p>
                                 </div>

@@ -86,6 +86,30 @@ uv run python main.py
 ```
 *The API will be available at `http://localhost:8000`*
 
+### 2.1 Quick Start: Document Indexing Setup
+
+`backend/index_documents.py` resolves the input directory as:
+`os.path.join(base_dir, "data", "sample_documents")`, where `base_dir` is `backend/`.
+
+Create this directory and place your sample PDFs there:
+
+```text
+backend/
+└── data/
+    └── sample_documents/
+        ├── handbook.pdf
+        └── policy.pdf
+```
+
+Accepted formats: **PDF only** (the loader uses `glob="**/*.pdf"`).
+
+Run indexing after adding PDFs:
+
+```bash
+cd backend
+uv run python index_documents.py
+```
+
 ### 3. Frontend Setup
 
 ```bash
@@ -135,4 +159,3 @@ Veridoc is optimized for automated deployment via **GitHub Actions**.
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
