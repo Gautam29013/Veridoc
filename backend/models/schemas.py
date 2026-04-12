@@ -28,7 +28,7 @@ class UserResponse(UserBase):
     bio: Optional[str] = None
     phone: Optional[str] = None
     is_google_user: bool = False
-    is_admin: bool = False
+    role: str = "user"
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:

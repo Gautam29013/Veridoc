@@ -23,8 +23,12 @@ export default function LoginPage() {
         setError("");
         setLoading(true);
         try {
-            await login({ email, password });
-            navigate("/dashboard");
+            const data = await login({ email, password });
+            if (data.user?.role === "admin") {
+                navigate("/admin");
+            } else {
+                navigate("/dashboard");
+            }
         } catch (err) {
             setError(err.response?.data?.detail || "Failed to login. Please check your credentials.");
         } finally {
@@ -36,8 +40,12 @@ export default function LoginPage() {
         setLoading(true);
         setError("");
         try {
-            await googleLogin(credentialResponse.credential);
-            navigate("/dashboard");
+            const data = await googleLogin(credentialResponse.credential);
+            if (data.user?.role === "admin") {
+                navigate("/admin");
+            } else {
+                navigate("/dashboard");
+            }
         } catch (err) {
             setError(err.response?.data?.detail || "Google login failed.");
         } finally {

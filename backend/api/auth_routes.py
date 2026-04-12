@@ -35,7 +35,7 @@ async def signup(user: UserCreate):
     user_dict = user.model_dump()
     user_dict["password"] = get_password_hash(user_dict["password"])
     user_dict["_id"] = str(uuid.uuid4())
-    user_dict["is_admin"] = user.email.endswith('@airindia.com')
+    user_dict["role"] = "user"
     user_dict["created_at"] = datetime.utcnow()
     
     await db.users.insert_one(user_dict)
@@ -49,7 +49,7 @@ async def signup(user: UserCreate):
         "token_type": "bearer"
     }
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=SignupResponse)
 async def login(user_data: UserLogin):
     db = get_database()
     
@@ -62,7 +62,11 @@ async def login(user_data: UserLogin):
         )
     
     access_token = create_access_token(data={"sub": user["email"]})
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "user": user,
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
 
 @router.post("/google", response_model=SignupResponse)
 async def google_auth(data: GoogleLogin):
@@ -87,7 +91,7 @@ async def google_auth(data: GoogleLogin):
                 "full_name": full_name,
                 "picture_url": picture_url,
                 "is_google_user": True,
-                "is_admin": email.endswith('@airindia.com'),
+                "role": "user",
                 "created_at": datetime.utcnow()
             }
             await db.users.insert_one(user)

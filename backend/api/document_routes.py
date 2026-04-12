@@ -7,7 +7,7 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 
 async def verify_admin(current_user: dict = Depends(get_current_user)):
     """Dependency to check if the current user is an admin."""
-    if not current_user.get("is_admin"):
+    if current_user.get("role", "user") != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform this operation")
     return current_user
 

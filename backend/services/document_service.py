@@ -8,8 +8,8 @@ from fastapi import UploadFile
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from backend.services.bedrock_service import vector_store
-from backend.models.database import get_database
+from services.bedrock_service import vector_store
+from models.database import get_database
 
 class DocumentService:
     async def process_and_index(self, file: UploadFile, user_id: str) -> Dict[str, Any]:

@@ -30,8 +30,12 @@ export default function SignupPage() {
         setError("");
         setLoading(true);
         try {
-            await signup(formData);
-            navigate("/dashboard");
+            const data = await signup(formData);
+            if (data.user?.role === "admin") {
+                navigate("/admin");
+            } else {
+                navigate("/dashboard");
+            }
         } catch (err) {
             setError(err.response?.data?.detail || "Failed to create account. Please try again.");
         } finally {
@@ -43,8 +47,12 @@ export default function SignupPage() {
         setLoading(true);
         setError("");
         try {
-            await googleLogin(credentialResponse.credential);
-            navigate("/dashboard");
+            const data = await googleLogin(credentialResponse.credential);
+            if (data.user?.role === "admin") {
+                navigate("/admin");
+            } else {
+                navigate("/dashboard");
+            }
         } catch (err) {
             setError(err.response?.data?.detail || "Google login failed.");
         } finally {
