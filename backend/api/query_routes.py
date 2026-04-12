@@ -4,9 +4,9 @@ from typing import List, Optional
 from datetime import datetime
 import uuid
 
-from backend.services.bedrock_service import get_bedrock_response
-from backend.models.database import get_database
-from backend.utils.auth import get_current_user
+from services.bedrock_service import get_bedrock_response
+from models.database import get_database
+from utils.auth import get_current_user
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 

@@ -5,8 +5,8 @@ import sys
 # Add project root to path if necessary
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from backend.app import app
-from backend.config import API_PORT, API_HOST
+from app import app
+from config import API_PORT, API_HOST
 
 if __name__ == "__main__":
     uvicorn.run(

@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
 import cloudinary
 import cloudinary.uploader
-from backend.models.schemas import UserCreate, UserLogin, UserResponse, Token, SignupResponse, GoogleLogin, UserUpdate
-from backend.models.database import get_database
-from backend.utils.auth import get_password_hash, verify_password, create_access_token, get_current_user
-from backend.config import GOOGLE_CLIENT_ID, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+from models.schemas import UserCreate, UserLogin, UserResponse, Token, SignupResponse, GoogleLogin, UserUpdate
+from models.database import get_database
+from utils.auth import get_password_hash, verify_password, create_access_token, get_current_user
+from config import GOOGLE_CLIENT_ID, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
 from datetime import datetime
 import uuid
 from google.oauth2 import id_token
