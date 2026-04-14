@@ -18,7 +18,7 @@ export default defineConfig({
     clientPort: 443,
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:8000",
+        target: process.env.VITE_API_TARGET || "http://127.0.0.1:8000",
         changeOrigin: true,
         rewrite: (apiPath) => apiPath.replace(/^\/api/, ""),
       },

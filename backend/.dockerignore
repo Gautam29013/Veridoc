@@ -1,0 +1,11 @@
+__pycache__
+.venv
+.env
+.git
+.gitignore
+*.pyc
+*.pyo
+*.pyd
+.db
+vector_db/
+chroma_vectorestore/
