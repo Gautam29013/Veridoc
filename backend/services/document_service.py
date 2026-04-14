@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, List
 
-from fastapi import UploadFile
+from fastapi import UploadFile, BackgroundTasks
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
@@ -13,7 +13,7 @@ from services.bedrock_service import vector_store
 from models.database import get_database
 
 class DocumentService:
-    async def enqueue_process_and_index(self, file: UploadFile, user_id: str, background_tasks: Any) -> Dict[str, Any]:
+    async def enqueue_process_and_index(self, file: UploadFile, user_id: str, background_tasks: BackgroundTasks) -> Dict[str, Any]:
         temp_fd, temp_path = tempfile.mkstemp(suffix=".pdf")
         doc_id = str(uuid.uuid4())
         db = get_database()
@@ -63,6 +63,7 @@ class DocumentService:
         
     async def _process_pdf_background(self, doc_id: str, file_path: str, filename: str):
         db = get_database()
+        all_uuids = []
         try:
             await db.documents.update_one({"_id": doc_id}, {"$set": {"status": "processing"}})
             
@@ -75,7 +76,6 @@ class DocumentService:
             batch_size = 50
             batch_texts = []
             total_chunks_processed = 0
-            all_uuids = []
             
             for page in pages:
                 texts = text_splitter.split_documents([page])
@@ -125,7 +125,7 @@ class DocumentService:
 
         except Exception as e:
             print(f"Background processing error: {e}")
-            if 'all_uuids' in locals() and all_uuids:
+            if all_uuids:
                 try:
                     await asyncio.to_thread(vector_store.delete, ids=all_uuids)
                 except Exception as cleanup_err:
