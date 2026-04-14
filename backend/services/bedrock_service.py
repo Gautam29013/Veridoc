@@ -34,16 +34,25 @@ class AmazonTitanEmbedding(Embeddings):
         return json.loads(response["body"].read())["embedding"]
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        embeddings = []
-        for i, text in enumerate(texts):
-            try:
-                safe_text = self._safe_truncate(text)
-                embedding = self.embed_query(safe_text)
-                embeddings.append(embedding)
-                # Small sleep to avoid hitting Bedrock TPS (Transactions Per Second) limits on large PDFs
-                time.sleep(0.1)
-            except Exception as e:
-                print(f"[Warning] Skipping text #{i} due to error: {e}")
+        import concurrent.futures
+        
+        embeddings = [None] * len(texts)
+        
+        def _process_item(index, text):
+            return index, self.embed_query(text)
+                
+        # Boto3 client's adaptive retry handles HTTP 429 backoff gracefully
+        # Using a ThreadPoolExecutor dramatically reduces the per-chunk overhead
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_index = {executor.submit(_process_item, i, text): i for i, text in enumerate(texts)}
+            for future in concurrent.futures.as_completed(future_to_index):
+                try:
+                    index, embedding_result = future.result()
+                    embeddings[index] = embedding_result
+                except Exception as e:
+                    print(f"[Error] Failed to embed chunk: {e}")
+                    raise
+                    
         return embeddings
 
 embeddings = AmazonTitanEmbedding()
