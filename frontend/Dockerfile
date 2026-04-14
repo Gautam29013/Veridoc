@@ -16,8 +16,11 @@ RUN pnpm install
 # Copy the rest of the application
 COPY . .
 
+# Set build-time environment variables
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+
 # Build the application
-# Note: VITE_ variables must be present at build time
 RUN pnpm build
 
 # --- Stage 2: Runtime ---
