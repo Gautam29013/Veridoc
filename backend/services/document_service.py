@@ -1,3 +1,4 @@
+import asyncio
 import os
 import tempfile
 import uuid
@@ -61,7 +62,6 @@ class DocumentService:
         return doc
         
     async def _process_pdf_background(self, doc_id: str, file_path: str, filename: str):
-        import asyncio
         db = get_database()
         try:
             await db.documents.update_one({"_id": doc_id}, {"$set": {"status": "processing"}})
@@ -125,6 +125,11 @@ class DocumentService:
 
         except Exception as e:
             print(f"Background processing error: {e}")
+            if 'all_uuids' in locals() and all_uuids:
+                try:
+                    await asyncio.to_thread(vector_store.delete, ids=all_uuids)
+                except Exception as cleanup_err:
+                    print(f"Error cleaning up orphaned chunks: {cleanup_err}")
             await db.documents.update_one({"_id": doc_id}, {"$set": {"status": "failed", "error": str(e)}})
         finally:
             try:
