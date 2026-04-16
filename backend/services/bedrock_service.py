@@ -53,7 +53,7 @@ class AmazonTitanEmbedding(Embeddings):
                     index, embedding_result = future.result()
                     embeddings[index] = embedding_result
                 except Exception as e:
-                    logger.error("Failed to embed chunk: %s", e)
+                    logger.exception("Failed to embed chunk: %s", e)
                     raise
                     
         return embeddings
