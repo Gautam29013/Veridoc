@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
+import asyncio
 import uuid
 
 from services.bedrock_service import get_bedrock_response
@@ -84,6 +85,7 @@ async def chat_endpoint(request: ChatRequest, current_user: dict = Depends(get_c
         total_docs = sum(status_counts.values())
         processed_docs = status_counts.get("processed", 0)
         processing_docs = status_counts.get("queued", 0) + status_counts.get("processing", 0)
+        failed_docs = status_counts.get("failed", 0)
 
         # User message dict
         user_msg = {
@@ -108,8 +110,13 @@ async def chat_endpoint(request: ChatRequest, current_user: dict = Depends(get_c
                 f"Your documents are still being processed ({processing_docs} in queue). "
                 "Please wait a moment and try again once processing is complete."
             )
+        elif total_docs > 0 and processed_docs == 0 and failed_docs > 0:
+            response_text = (
+                f"Some documents failed to process ({failed_docs} failed). "
+                "Please re-upload them and try again."
+            )
         else:
-            response_text = get_bedrock_response(request.message, history_dicts)
+            response_text = await asyncio.to_thread(get_bedrock_response, request.message, history_dicts)
 
         bot_msg = {
             "id": str(uuid.uuid4()),

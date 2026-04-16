@@ -10,7 +10,8 @@ EMBEDDINGS_DIMENSION = int(os.getenv("EMBEDDINGS_DIMENSION", "384"))
 
 # Vector Database Configuration
 VECTOR_DB = os.getenv("VECTOR_DB", "chromadb")
-CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "./vector_db/chromadb")
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", os.path.join(_BASE_DIR, "chroma_vectorestore"))
 FAISS_INDEX_DIR = os.getenv("FAISS_INDEX_DIR", "./vector_db/faiss_indices")
 
 # Chunking Configuration

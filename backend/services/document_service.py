@@ -183,7 +183,7 @@ class DocumentService:
         chunk_ids = doc.get("chunk_ids", [])
         if chunk_ids:
             try:
-                vector_store.delete(ids=chunk_ids)
+                await asyncio.to_thread(vector_store.delete, ids=chunk_ids)
             except Exception as e:
                 print(f"Error deleting chunks from ChromaDB: {e}")
                 

@@ -7,6 +7,7 @@ from botocore.config import Config
 from langchain.embeddings.base import Embeddings
 from langchain_chroma import Chroma
 import os
+from config import CHROMA_PERSIST_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -60,12 +61,10 @@ class AmazonTitanEmbedding(Embeddings):
 
 embeddings = AmazonTitanEmbedding()
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 vector_store = Chroma(
     collection_name="veridoc_cosine",
     embedding_function=embeddings,
-    persist_directory=os.path.join(BASE_DIR, "chroma_vectorestore"),
+    persist_directory=CHROMA_PERSIST_DIR,
     collection_metadata={"hnsw:space": "cosine"},
 )
 
