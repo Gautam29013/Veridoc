@@ -10,6 +10,8 @@ services:
       - "8000:8000"
     env_file:
       - ./backend/.env
+    volumes:
+      - chroma_data:/app/chroma_vectorestore
     networks:
       - veridoc-network
 
@@ -30,3 +32,6 @@ services:
 networks:
   veridoc-network:
     driver: bridge
+
+volumes:
+  chroma_data:
