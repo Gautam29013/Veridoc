@@ -12,6 +12,7 @@ async def reset_documents():
 
         reset_count = 0
         timeout_count = 0
+        failed_count = 0
         async for doc in cursor:
             chunk_ids = doc.get("chunk_ids", [])
             state = "success"
@@ -47,10 +48,18 @@ async def reset_documents():
                     {"$set": {"status": "cleanup_timeout"}}
                 )
                 timeout_count += 1
+            elif state == "failed":
+                await db.documents.update_one(
+                    {"_id": doc["_id"]},
+                    {"$set": {"status": "cleanup_failed"}}
+                )
+                failed_count += 1
 
         print(f"Reset {reset_count} documents to 'uploaded' state.")
         if timeout_count > 0:
             print(f"Flagged {timeout_count} documents as 'cleanup_timeout' due to hanging deletions.")
+        if failed_count > 0:
+            print(f"Flagged {failed_count} documents as 'cleanup_failed' due to errors.")
     finally:
         await close_mongo_connection()
 
