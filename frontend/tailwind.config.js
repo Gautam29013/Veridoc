@@ -19,6 +19,11 @@ export default {
   		}
   	},
   	extend: {
+  		fontFamily: {
+  			sans: ['Geist', 'sans-serif'],
+  			serif: ['Lora', 'serif'],
+  			mono: ['Fira Code', 'monospace'],
+  		},
   		colors: {
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',

@@ -137,13 +137,17 @@ export default function DashboardPage() {
             />
             <SidebarInset className="bg-background flex flex-col h-svh overflow-hidden relative">
                 {/* Header */}
-                <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-30">
-                    <div className="flex items-center gap-2">
-                        <SidebarTrigger className="-ml-1" />
-                        <Separator orientation="vertical" className="mx-2 h-4" />
-
+                <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border/50 px-6 bg-background/80 backdrop-blur-md z-30">
+                    <div className="flex items-center gap-4">
+                        <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-primary transition-colors" />
+                        <Separator orientation="vertical" className="h-4 bg-border/50" />
+                        <h1 className="text-sm font-bold text-muted-foreground/80 tracking-tight">Dashboard</h1>
                     </div>
                     <div className="flex items-center gap-3">
+                        <div className="hidden md:flex items-center bg-muted/50 rounded-full px-3 py-1 border border-border/50 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                            <Sparkles className="h-3 w-3 mr-2 text-primary" />
+                            Premium Access
+                        </div>
                         <ThemeToggle />
                     </div>
                 </header>
@@ -153,94 +157,100 @@ export default function DashboardPage() {
                     {/* Chat Area (Scrollable) */}
                     <div
                         ref={scrollRef}
-                        className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth"
+                        className="flex-1 overflow-y-auto p-4 md:p-12 scroll-smooth bg-gradient-to-b from-background to-background/50"
                     >
                         {isFetchingHistory ? (
                             <div className="min-h-full flex flex-col items-center justify-center py-12 md:py-20 text-muted-foreground gap-4">
-                                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-                                <p className="text-sm font-medium">Loading chat history...</p>
+                                <div className="animate-spin h-10 w-10 border-[3px] border-primary border-t-transparent rounded-full shadow-lg shadow-primary/20" />
+                                <p className="text-sm font-bold tracking-tight text-primary/80">Syncing with Brain...</p>
                             </div>
                         ) : messages.length === 0 ? (
-                            <div className="min-h-full flex flex-col items-center justify-center text-center space-y-6 py-12 md:py-20">
-                                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center animate-pulse">
-                                    <Bot className="h-8 w-8 text-primary" />
+                            <div className="min-h-full flex flex-col items-center justify-center text-center space-y-8 py-12 md:py-20">
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full scale-150 animate-pulse" />
+                                    <div className="relative w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/5 rounded-[2.5rem] flex items-center justify-center shadow-2xl border border-primary/20">
+                                        <Bot className="h-10 w-10 text-primary" />
+                                    </div>
                                 </div>
-                                <div className="space-y-2 max-w-md">
-                                    <h2 className="text-3xl font-bold tracking-tight">How can I help you today?</h2>
-                                    <p className="text-muted-foreground px-4">
-                                        Ask me anything about your uploaded policies, documents, and guidelines.
-                                        Powered by RAG for accurate, source-backed answers.
+                                <div className="space-y-3 max-w-lg">
+                                    <h2 className="text-4xl md:text-5xl font-black tracking-tight text-foreground/90 leading-tight">
+                                        How can I help you <span className="text-primary italic">today?</span>
+                                    </h2>
+                                    <p className="text-muted-foreground/80 text-lg font-medium px-4">
+                                        I'm your AI-powered assistant for policy analysis and document verification.
                                     </p>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl px-4 mt-8 pb-32">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl px-4 mt-12 pb-32">
                                     {[
-                                        "Summarize the latest document",
-                                        "What is the current policy?",
-                                        "Check the key details",
-                                        "Provide an overview"
-                                    ].map((suggestion, i) => (
+                                        { q: "Summarize the latest document", desc: "Get a quick brief of your files" },
+                                        { q: "What is the current policy?", desc: "Check specific compliance rules" },
+                                        { q: "Check the key details", desc: "Extract important information" },
+                                        { q: "Provide an overview", desc: "General summary of everything" }
+                                    ].map((item, i) => (
                                         <button
                                             key={i}
                                             onClick={() => {
-                                                setInputValue(suggestion);
+                                                setInputValue(item.q);
                                             }}
-                                            className="text-left p-4 rounded-xl border border-border/50 hover:bg-muted/50 transition-all text-sm group"
+                                            className="text-left p-5 rounded-2xl border border-border/50 bg-card/50 hover:bg-muted/80 hover:border-primary/30 hover:translate-y-[-2px] transition-all duration-300 group shadow-sm hover:shadow-md"
                                         >
-                                            <span className="font-medium text-foreground block">{suggestion}</span>
-                                            <span className="text-xs text-muted-foreground">Ask AI to help with this...</span>
+                                            <span className="font-bold text-foreground block text-[15px] group-hover:text-primary transition-colors">{item.q}</span>
+                                            <span className="text-xs text-muted-foreground/70 font-medium mt-1 block">{item.desc}</span>
                                         </button>
                                     ))}
                                 </div>
                             </div>
                         ) : (
-                            <div className="max-w-3xl mx-auto w-full space-y-6 pb-40">
+                            <div className="max-w-4xl mx-auto w-full space-y-8 pb-48">
                                 {messages.map((msg) => (
                                     <div
                                         key={msg.id}
                                         className={cn(
-                                            "flex w-full gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300",
+                                            "flex w-full gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500",
                                             msg.role === "user" ? "flex-row-reverse" : "flex-row"
                                         )}
                                     >
                                         <div className={cn(
-                                            "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm",
-                                            msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                                            "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform hover:scale-110",
+                                            msg.role === "user" 
+                                                ? "bg-primary text-primary-foreground shadow-primary/20" 
+                                                : "bg-muted border border-border/50 text-primary shadow-sm"
                                         )}>
-                                            {msg.role === "user" ? <User2 className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                                            {msg.role === "user" ? <User2 className="h-5 w-5" /> : <Bot className="h-5 w-5" />}
                                         </div>
                                         <div className={cn(
-                                            "flex flex-col gap-1 max-w-[85%]",
+                                            "flex flex-col gap-2 max-w-[85%] md:max-w-[75%]",
                                             msg.role === "user" ? "items-end" : "items-start"
                                         )}>
                                             <div className={cn(
-                                                "px-4 py-3 rounded-2xl text-[15px] leading-relaxed shadow-sm",
+                                                "px-5 py-4 rounded-[1.5rem] text-[16px] leading-relaxed shadow-sm font-medium",
                                                 msg.role === "user"
-                                                    ? "bg-primary text-primary-foreground rounded-tr-none"
-                                                    : "bg-muted/50 border border-border/50 rounded-tl-none font-medium text-foreground dark:text-gray-200"
+                                                    ? "bg-primary text-primary-foreground rounded-tr-none shadow-md shadow-primary/10"
+                                                    : "bg-muted/30 border border-border/40 rounded-tl-none text-foreground backdrop-blur-sm"
                                             )}>
                                                 {msg.content}
                                             </div>
-                                            <span className="text-[10px] text-muted-foreground font-medium uppercase px-1">
+                                            <span className="text-[10px] text-muted-foreground/60 font-black uppercase tracking-widest px-2">
                                                 {msg.timestamp}
                                             </span>
                                         </div>
                                     </div>
                                 ))}
                                 {isLoading && (
-                                    <div className="flex w-full gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 flex-row">
-                                        <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm bg-muted text-foreground">
-                                            <Bot className="h-4 w-4" />
+                                    <div className="flex w-full gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300 flex-row">
+                                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm bg-muted border border-border/50 text-primary">
+                                            <Bot className="h-5 w-5" />
                                         </div>
-                                        <div className="flex flex-col gap-1 max-w-[85%] items-start">
-                                            <div className="px-4 py-4 rounded-2xl text-[15px] leading-relaxed shadow-sm bg-muted/50 border border-border/50 rounded-tl-none font-medium text-foreground dark:text-gray-200 flex items-center h-[46px]">
+                                        <div className="flex flex-col gap-2 max-w-[85%] items-start">
+                                            <div className="px-6 py-5 rounded-[1.5rem] shadow-sm bg-muted/30 border border-border/40 rounded-tl-none flex items-center h-[54px] backdrop-blur-sm">
                                                 <div className="flex items-center gap-1.5 h-full">
-                                                    <span className="w-2 h-2 rounded-full bg-foreground/50 animate-bounce" style={{ animationDelay: '0ms' }} />
-                                                    <span className="w-2 h-2 rounded-full bg-foreground/50 animate-bounce" style={{ animationDelay: '150ms' }} />
-                                                    <span className="w-2 h-2 rounded-full bg-foreground/50 animate-bounce" style={{ animationDelay: '300ms' }} />
+                                                    <span className="w-2.5 h-2.5 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: '0ms' }} />
+                                                    <span className="w-2.5 h-2.5 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: '150ms' }} />
+                                                    <span className="w-2.5 h-2.5 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: '300ms' }} />
                                                 </div>
                                             </div>
-                                            <span className="text-[10px] text-muted-foreground font-medium uppercase px-1">
-                                                Typing...
+                                            <span className="text-[10px] text-muted-foreground/60 font-black uppercase tracking-widest px-2">
+                                                Synthesizing Response...
                                             </span>
                                         </div>
                                     </div>
@@ -250,10 +260,15 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Input Area (Floating) */}
-                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 bg-gradient-to-t from-background via-background/95 to-transparent pt-12 z-20 pointer-events-none">
-                        <div className="max-w-3xl mx-auto relative group pointer-events-auto">
-                            <div className="absolute inset-0 bg-primary/20 blur-3xl opacity-0 group-focus-within:opacity-30 transition-opacity pointer-events-none" />
-                            <div className="relative flex items-end gap-2 bg-muted/50 backdrop-blur border border-border/50 rounded-2xl p-2 pl-4 shadow-xl ring-offset-background group-focus-within:ring-2 group-focus-within:ring-primary/20 group-focus-within:border-primary/50 transition-all">
+                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-10 bg-gradient-to-t from-background via-background/95 to-transparent pt-20 z-20 pointer-events-none">
+                        <div className="max-w-4xl mx-auto relative group pointer-events-auto">
+                            <div className="absolute inset-0 bg-primary/10 blur-3xl opacity-0 group-focus-within:opacity-40 transition-opacity duration-500 pointer-events-none" />
+                            <div className="relative flex items-end gap-3 bg-card/80 backdrop-blur-xl border border-border/50 rounded-3xl p-3 pl-6 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] ring-offset-background group-focus-within:ring-2 group-focus-within:ring-primary/20 group-focus-within:border-primary/40 transition-all duration-300">
+                                <div className="pb-3 pr-2">
+                                    <button className="p-2.5 rounded-xl bg-muted/50 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all">
+                                        <Paperclip className="h-5 w-5" />
+                                    </button>
+                                </div>
                                 <textarea
                                     value={inputValue}
                                     onChange={(e) => setInputValue(e.target.value)}
@@ -263,8 +278,8 @@ export default function DashboardPage() {
                                             handleSendMessage();
                                         }
                                     }}
-                                    placeholder="Message Veridoc AI..."
-                                    className="flex-1 bg-transparent border-none focus:ring-0 py-3 text-[15px] resize-none max-h-40 overflow-y-auto leading-relaxed scrollbar-hide"
+                                    placeholder="Ask anything about your documents..."
+                                    className="flex-1 bg-transparent border-none focus:ring-0 py-3.5 text-[16px] resize-none max-h-40 overflow-y-auto leading-relaxed scrollbar-hide font-medium placeholder:text-muted-foreground/40"
                                     rows={1}
                                     style={{ height: 'auto' }}
                                     onInput={(e) => {
@@ -272,8 +287,8 @@ export default function DashboardPage() {
                                         e.target.style.height = e.target.scrollHeight + 'px';
                                     }}
                                 />
-                                <div className="flex items-center gap-1 pr-1 pb-1">
-                                    <button className="p-2 text-muted-foreground hover:text-primary transition-colors">
+                                <div className="flex items-center gap-2 pr-1 pb-1">
+                                    <button className="p-3 text-muted-foreground/60 hover:text-primary transition-colors hidden md:block">
                                         <Mic className="h-5 w-5" />
                                     </button>
                                     <Button
@@ -281,16 +296,22 @@ export default function DashboardPage() {
                                         onClick={handleSendMessage}
                                         disabled={!inputValue.trim() || isLoading}
                                         className={cn(
-                                            "h-9 w-9 rounded-xl transition-all duration-300 flex items-center justify-center",
-                                            inputValue.trim() && !isLoading ? "bg-primary scale-100" : "bg-muted-foreground opacity-30 scale-90"
+                                            "h-12 w-12 rounded-2xl transition-all duration-500 flex items-center justify-center shadow-lg",
+                                            inputValue.trim() && !isLoading 
+                                                ? "bg-primary text-primary-foreground scale-100 hover:scale-105 shadow-primary/20" 
+                                                : "bg-muted text-muted-foreground/30 opacity-50 scale-90"
                                         )}
                                     >
-                                        {isLoading ? <div className="animate-spin h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full" /> : <Send className="h-4 w-4" />}
+                                        {isLoading ? (
+                                            <div className="animate-spin h-5 w-5 border-[3px] border-primary-foreground border-t-transparent rounded-full" />
+                                        ) : (
+                                            <Send className="h-5 w-5" />
+                                        )}
                                     </Button>
                                 </div>
                             </div>
-                            <p className="text-[10px] text-center mt-3 text-muted-foreground/60 font-medium">
-                                Veridoc AI can make mistakes. Check important info.
+                            <p className="text-[10px] text-center mt-4 text-muted-foreground/40 font-black uppercase tracking-[0.2em]">
+                                Veridoc AI Engine • Powered by RAG 2.0
                             </p>
                         </div>
                     </div>

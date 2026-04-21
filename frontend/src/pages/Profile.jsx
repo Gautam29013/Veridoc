@@ -118,47 +118,48 @@ export default function Profile() {
         <SidebarProvider>
             <AppSidebar />
             <SidebarInset className="bg-background flex flex-col h-svh overflow-hidden">
-                <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b px-4 bg-background/95 backdrop-blur z-30">
-                    <div className="flex items-center gap-2">
-                        <SidebarTrigger className="-ml-1" />
-                        <Separator orientation="vertical" className="mx-2 h-4" />
-                        <h1 className="text-sm font-medium">Profile Settings</h1>
+                <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border/50 px-6 bg-background/80 backdrop-blur-md z-30">
+                    <div className="flex items-center gap-4">
+                        <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-primary transition-colors" />
+                        <Separator orientation="vertical" className="h-4 bg-border/50" />
+                        <h1 className="text-sm font-bold text-muted-foreground/80 tracking-tight">Profile Settings</h1>
                     </div>
                     <ThemeToggle />
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-4 md:p-8">
-                    <div className="max-w-2xl mx-auto space-y-8">
-                        <div>
-                            <h2 className="text-3xl font-bold tracking-tight">Profile</h2>
-                            <p className="text-muted-foreground text-sm">Manage your personal information and how it's displayed.</p>
+                <div className="flex-1 overflow-y-auto p-4 md:p-12 bg-gradient-to-b from-background to-background/50">
+                    <div className="max-w-3xl mx-auto space-y-12 pb-20">
+                        <div className="space-y-2">
+                            <h2 className="text-5xl font-black tracking-tight text-foreground/90">Identity</h2>
+                            <p className="text-muted-foreground/70 text-lg font-medium">Manage your digital presence and contact details.</p>
                         </div>
 
                         {isLoading ? (
-                            <div className="flex items-center justify-center p-12">
-                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            <div className="flex flex-col items-center justify-center p-24 space-y-4">
+                                <Loader2 className="h-12 w-12 animate-spin text-primary/50" />
+                                <p className="text-sm font-bold text-muted-foreground/50 uppercase tracking-widest">Securing Connection...</p>
                             </div>
                         ) : (
-                            <form onSubmit={handleUpdate} className="space-y-6">
-                                <Card className="border-sidebar-border/50 shadow-sm overflow-hidden">
-                                    <CardHeader className="bg-muted/30 pb-8">
-                                        <div className="flex items-center gap-6">
-                                            <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                                                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary border-4 border-background shadow-xl overflow-hidden relative">
+                            <form onSubmit={handleUpdate} className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                <Card className="border-border/50 shadow-2xl shadow-primary/5 overflow-hidden rounded-[2.5rem] bg-card/50 backdrop-blur-sm">
+                                    <CardHeader className="bg-primary/5 border-b border-border/30 pb-10 pt-10 px-10">
+                                        <div className="flex flex-col md:flex-row items-center gap-8">
+                                            <div className="relative group" onClick={() => fileInputRef.current?.click()}>
+                                                <div className="w-32 h-32 rounded-[2rem] bg-background flex items-center justify-center text-primary border-[6px] border-card shadow-2xl overflow-hidden relative cursor-pointer ring-1 ring-primary/20 transition-all group-hover:ring-primary/50">
                                                     {isUploading ? (
-                                                        <div className="absolute inset-0 bg-background/60 flex items-center justify-center z-10">
-                                                            <Loader2 className="h-8 w-8 animate-spin" />
+                                                        <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10 backdrop-blur-sm">
+                                                            <Loader2 className="h-10 w-10 animate-spin text-primary" />
                                                         </div>
                                                     ) : null}
                                                     {user.picture_url ? (
-                                                        <img src={user.picture_url} alt={user.full_name} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
+                                                        <img src={user.picture_url} alt={user.full_name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                                     ) : (
-                                                        <User2 className="h-12 w-12" />
+                                                        <User2 className="h-16 w-16 opacity-50" />
                                                     )}
 
                                                     {/* Camera Overlay */}
-                                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <Camera className="h-8 w-8 text-white" />
+                                                    <div className="absolute inset-0 bg-primary/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-[2px]">
+                                                        <Camera className="h-10 w-10 text-white drop-shadow-lg" />
                                                     </div>
                                                 </div>
                                                 <input
@@ -169,32 +170,39 @@ export default function Profile() {
                                                     onChange={handleImageUpload}
                                                 />
                                             </div>
-                                            <div>
-                                                <CardTitle className="text-2xl">{user.full_name || "User Name"}</CardTitle>
-                                                <CardDescription>{user.email}</CardDescription>
+                                            <div className="text-center md:text-left space-y-2">
+                                                <CardTitle className="text-4xl font-black tracking-tight">{user.full_name || "New Explorer"}</CardTitle>
+                                                <div className="flex items-center justify-center md:justify-start gap-2 text-muted-foreground/70 font-medium">
+                                                    <Mail className="h-4 w-4" />
+                                                    {user.email}
+                                                </div>
                                             </div>
                                         </div>
                                     </CardHeader>
-                                    <CardContent className="pt-8 space-y-6">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Full Name</label>
-                                                <div className="relative">
-                                                    <User2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <CardContent className="pt-12 px-10 pb-12 space-y-10">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Full Name</label>
+                                                <div className="relative group">
+                                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-primary/5 text-primary/50 group-focus-within:text-primary transition-colors">
+                                                        <User2 className="h-4 w-4" />
+                                                    </div>
                                                     <Input
-                                                        className="pl-9 bg-muted/20"
+                                                        className="h-14 pl-14 bg-background/50 border-border/50 rounded-2xl focus:ring-primary/20 focus:border-primary/50 transition-all font-bold text-base"
                                                         value={user.full_name}
                                                         onChange={(e) => setUser({ ...user, full_name: e.target.value })}
-                                                        placeholder="Your full name"
+                                                        placeholder="Your legal name"
                                                     />
                                                 </div>
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Phone Number</label>
-                                                <div className="relative">
-                                                    <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Mobile Contact</label>
+                                                <div className="relative group">
+                                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-accent/5 text-accent/50 group-focus-within:text-accent transition-colors">
+                                                        <Phone className="h-4 w-4" />
+                                                    </div>
                                                     <Input
-                                                        className="pl-9 bg-muted/20"
+                                                        className="h-14 pl-14 bg-background/50 border-border/50 rounded-2xl focus:ring-accent/20 focus:border-accent/50 transition-all font-bold text-base"
                                                         value={user.phone}
                                                         onChange={(e) => setUser({ ...user, phone: e.target.value })}
                                                         placeholder="+1 (555) 000-0000"
@@ -203,40 +211,44 @@ export default function Profile() {
                                             </div>
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Email Address</label>
-                                            <div className="relative">
-                                                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Primary Email</label>
+                                            <div className="relative opacity-70">
+                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-muted-foreground/5 text-muted-foreground/30">
+                                                    <Mail className="h-4 w-4" />
+                                                </div>
                                                 <Input
                                                     disabled
-                                                    className="pl-9 bg-muted/50 cursor-not-allowed"
+                                                    className="h-14 pl-14 bg-muted/20 border-border/30 rounded-2xl cursor-not-allowed font-bold text-base"
                                                     value={user.email}
                                                 />
                                             </div>
-                                            <p className="text-[10px] text-muted-foreground ml-1 italic">Email cannot be changed after registration.</p>
+                                            <p className="text-[10px] text-muted-foreground/40 ml-1 font-bold italic">Email identity is immutable for security compliance.</p>
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Bio</label>
-                                            <div className="relative">
-                                                <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">Professional Bio</label>
+                                            <div className="relative group">
+                                                <div className="absolute left-4 top-5 p-1.5 rounded-lg bg-primary/5 text-primary/50 group-focus-within:text-primary transition-colors">
+                                                    <FileText className="h-4 w-4" />
+                                                </div>
                                                 <textarea
-                                                    className="w-full min-h-[120px] bg-muted/20 rounded-lg border border-input pl-9 pr-3 py-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                                                    className="w-full min-h-[160px] bg-background/50 rounded-[1.5rem] border border-border/50 pl-14 pr-6 py-5 text-base font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all outline-none resize-none"
                                                     value={user.bio}
                                                     onChange={(e) => setUser({ ...user, bio: e.target.value })}
-                                                    placeholder="Tell us a little about yourself..."
+                                                    placeholder="Synthesize your background..."
                                                 />
                                             </div>
                                         </div>
 
-                                        <div className="pt-4 flex justify-end gap-3">
-                                            <Button type="submit" disabled={isSaving} className="rounded-full px-8 shadow-lg shadow-primary/20">
+                                        <div className="pt-8 flex justify-end">
+                                            <Button type="submit" disabled={isSaving} className="h-16 rounded-[1.5rem] px-12 font-black text-lg shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all">
                                                 {isSaving ? (
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    <Loader2 className="mr-3 h-6 w-6 animate-spin" />
                                                 ) : (
-                                                    <Save className="mr-2 h-4 w-4" />
+                                                    <Save className="mr-3 h-6 w-6" />
                                                 )}
-                                                Save Changes
+                                                Update Profile
                                             </Button>
                                         </div>
                                     </CardContent>
