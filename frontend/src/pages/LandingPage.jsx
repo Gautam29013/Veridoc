@@ -22,10 +22,10 @@ const LandingPage = () => {
 
                         <div className="flex items-center gap-4">
                             <Link to="/login">
-                                <Button variant="ghost" className="font-bold text-sm uppercase tracking-widest hover:bg-primary/5 hover:text-primary">Sign In</Button>
+                                <Button variant="ghost" className="font-medium text-sm tracking-wide hover:bg-primary/5 hover:text-primary">Sign In</Button>
                             </Link>
                             <Link to="/signup">
-                                <Button className="font-black px-6 h-11 rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all">Get Started</Button>
+                                <Button className="font-medium px-6 h-11 rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all">Get Started</Button>
                             </Link>
                             <ThemeToggle />
                         </div>
@@ -52,12 +52,12 @@ const LandingPage = () => {
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-300">
                         <Link to="/signup">
-                            <Button size="lg" className="px-10 h-16 text-lg font-black rounded-2xl shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all group">
+                            <Button size="lg" className="px-10 h-16 text-xl font-medium rounded-2xl shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all group">
                                 Start Your Journey
                                 <Zap className="ml-3 h-5 w-5 group-hover:text-accent transition-colors" />
                             </Button>
                         </Link>
-                        <Button size="lg" variant="outline" className="px-10 h-16 text-lg font-bold rounded-2xl border-border/50 bg-card/30 backdrop-blur hover:bg-card hover:border-primary/30 transition-all">
+                        <Button size="lg" variant="outline" className="px-10 h-16 text-xl font-medium rounded-2xl border-border/50 bg-card/30 backdrop-blur hover:bg-card hover:border-primary/30 transition-all">
                             Live Demo
                         </Button>
                     </div>
@@ -94,12 +94,20 @@ const LandingPage = () => {
             {/* CTA Section */}
             <section className="py-20 md:py-32">
                 <div className="container mx-auto px-4">
-                    <Card className="bg-primary text-primary-foreground overflow-hidden">
-                        <CardHeader className="text-center pt-12 pb-8">
-                            <CardTitle className="text-3xl md:text-4xl font-bold mb-4">Ready to secure your documents?</CardTitle>
-                            <CardDescription className="text-primary-foreground/80 text-lg">
-                                Join thousands of users who trust Veridoc for their document needs.
+                    <Card className="bg-primary text-primary-foreground overflow-hidden relative border-none shadow-2xl">
+                        <div className="absolute top-[-20%] right-[-10%] w-[40%] h-[80%] bg-white/10 blur-[100px] rounded-full" />
+                        <CardHeader className="text-center pt-16 pb-12 relative z-10">
+                            <CardTitle className="text-4xl md:text-6xl font-black mb-6 tracking-tight">Ready to orchestrate your intelligence?</CardTitle>
+                            <CardDescription className="text-primary-foreground/80 text-xl font-medium max-w-2xl mx-auto mb-10">
+                                Join the elite organizations already leveraging Veridoc to power their knowledge retrieval.
                             </CardDescription>
+                            <div className="flex justify-center">
+                                <Link to="/signup">
+                                    <Button size="lg" variant="secondary" className="px-12 h-16 text-xl font-medium rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all text-primary bg-white hover:bg-white/90">
+                                        Get Started For Free
+                                    </Button>
+                                </Link>
+                            </div>
                         </CardHeader>
                     </Card>
                 </div>

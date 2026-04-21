@@ -32,11 +32,30 @@ import {
     Users, 
     UserPlus, 
     UserMinus,
-    Mail
+    Mail,
+    MoreHorizontal
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAllUsers, deleteUser, updateUserRole } from "@/services/userService";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function AdminPanel() {
     const navigate = useNavigate();
@@ -47,6 +66,11 @@ export default function AdminPanel() {
     const [isUploading, setIsUploading] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+    
+    // Confirmation Dialog States
+    const [confirmDeleteDoc, setConfirmDeleteDoc] = useState(null); // stores doc object
+    const [confirmDeleteUser, setConfirmDeleteUser] = useState(null); // stores user object
+    const [confirmToggleAdmin, setConfirmToggleAdmin] = useState(null); // stores { user, newRole, actionText }
 
     useEffect(() => {
         const verifyAdmin = async () => {
@@ -146,6 +170,7 @@ export default function AdminPanel() {
         try {
             await api.delete(`/documents/${docId}`);
             setDocuments(documents.filter(doc => doc._id !== docId));
+            setConfirmDeleteDoc(null);
             toast({
                 title: "Document Removed",
                 description: "The document metadata has been removed.",
@@ -159,12 +184,12 @@ export default function AdminPanel() {
         }
     };
 
-    const handleDeleteUser = async (userId, userEmail) => {
-        if (!window.confirm(`Are you sure you want to delete user ${userEmail}?`)) return;
-        
+    const handleDeleteUser = async (userId) => {
         try {
             await deleteUser(userId);
+            const userEmail = confirmDeleteUser?.email;
             setUsers(users.filter(u => u._id !== userId));
+            setConfirmDeleteUser(null);
             toast({
                 title: "User Deleted",
                 description: `${userEmail} has been removed.`,
@@ -178,18 +203,17 @@ export default function AdminPanel() {
         }
     };
 
-    const handleToggleAdmin = async (userId, currentRole, userEmail) => {
-        const newRole = currentRole === "admin" ? "user" : "admin";
-        const actionText = newRole === "admin" ? "make admin" : "remove admin";
+    const handleToggleAdmin = async () => {
+        if (!confirmToggleAdmin) return;
+        const { user: u, newRole } = confirmToggleAdmin;
         
-        if (!window.confirm(`Are you sure you want to ${actionText} ${userEmail}?`)) return;
-
         try {
-            await updateUserRole(userId, newRole);
-            setUsers(users.map(u => u._id === userId ? { ...u, role: newRole } : u));
+            await updateUserRole(u._id, newRole);
+            setUsers(users.map(user => user._id === u._id ? { ...user, role: newRole } : user));
+            setConfirmToggleAdmin(null);
             toast({
                 title: "Role Updated",
-                description: `${userEmail} is now a ${newRole}.`,
+                description: `${u.email} is now a ${newRole}.`,
             });
         } catch (err) {
             toast({
@@ -374,14 +398,25 @@ export default function AdminPanel() {
                                                             {doc.chunk_count}
                                                         </TableCell>
                                                         <TableCell className="px-8 py-6 text-right">
-                                                            <Button 
-                                                                variant="ghost" 
-                                                                size="icon" 
-                                                                onClick={() => handleDeleteDoc(doc._id)} 
-                                                                className="h-10 w-10 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100"
-                                                            >
-                                                                <Trash2 className="w-5 h-5" />
-                                                            </Button>
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button variant="ghost" className="h-10 w-10 p-0 rounded-xl hover:bg-muted transition-all">
+                                                                        <span className="sr-only">Open menu</span>
+                                                                        <MoreHorizontal className="h-5 w-5" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end" className="rounded-xl border-border/50 shadow-xl min-w-[160px]">
+                                                                    <DropdownMenuLabel className="font-black uppercase text-[10px] tracking-widest text-muted-foreground/50">Actions</DropdownMenuLabel>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem 
+                                                                        onClick={() => setConfirmDeleteDoc(doc)}
+                                                                        className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer font-bold gap-2 py-3"
+                                                                    >
+                                                                        <Trash2 className="w-4 h-4" />
+                                                                        Delete Document
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
@@ -447,30 +482,39 @@ export default function AdminPanel() {
                                                         {new Date(u.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                                                     </TableCell>
                                                     <TableCell className="px-8 py-6 text-right">
-                                                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <Button 
-                                                                variant="ghost" 
-                                                                size="sm" 
-                                                                onClick={() => handleToggleAdmin(u._id, u.role, u.email)}
-                                                                disabled={u._id === user?._id}
-                                                                className="font-bold text-[10px] uppercase tracking-widest gap-2 hover:bg-primary/10 hover:text-primary transition-all h-9 px-4 rounded-xl"
-                                                            >
-                                                                {u.role === "admin" ? (
-                                                                    <><UserMinus className="w-4 h-4" /> Demote</>
-                                                                ) : (
-                                                                    <><UserPlus className="w-4 h-4" /> Make Admin</>
-                                                                )}
-                                                            </Button>
-                                                            <Button 
-                                                                variant="ghost" 
-                                                                size="icon" 
-                                                                onClick={() => handleDeleteUser(u._id, u.email)}
-                                                                disabled={u._id === user?._id}
-                                                                className="h-9 w-9 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </Button>
-                                                        </div>
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" className="h-10 w-10 p-0 rounded-xl hover:bg-muted transition-all" disabled={u._id === user?._id}>
+                                                                    <span className="sr-only">Open menu</span>
+                                                                    <MoreHorizontal className="h-5 w-5" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" className="rounded-xl border-border/50 shadow-xl min-w-[200px]">
+                                                                <DropdownMenuLabel className="font-black uppercase text-[10px] tracking-widest text-muted-foreground/50">User Actions</DropdownMenuLabel>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem 
+                                                                    onClick={() => {
+                                                                        const newRole = u.role === "admin" ? "user" : "admin";
+                                                                        const actionText = newRole === "admin" ? "promote to admin" : "demote to user";
+                                                                        setConfirmToggleAdmin({ user: u, newRole, actionText });
+                                                                    }}
+                                                                    className="cursor-pointer font-bold gap-2 py-3"
+                                                                >
+                                                                    {u.role === "admin" ? (
+                                                                        <><UserMinus className="w-4 h-4" /> Demote to User</>
+                                                                    ) : (
+                                                                        <><UserPlus className="w-4 h-4" /> Make Admin</>
+                                                                    )}
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem 
+                                                                    onClick={() => setConfirmDeleteUser(u)}
+                                                                    className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer font-bold gap-2 py-3"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                    Delete Account
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
@@ -502,6 +546,71 @@ export default function AdminPanel() {
                    </Card>
                </div> 
             )}
+
+            {/* Confirmation Dialogs */}
+            
+            {/* Delete Document Confirmation */}
+            <AlertDialog open={!!confirmDeleteDoc} onOpenChange={(open) => !open && setConfirmDeleteDoc(null)}>
+                <AlertDialogContent className="rounded-[2rem] border-border/50 shadow-2xl bg-card/90 backdrop-blur-2xl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-2xl font-black tracking-tight">Delete Knowledge Object?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-base font-medium">
+                            Are you sure you want to remove <span className="text-foreground font-bold italic">"{confirmDeleteDoc?.filename}"</span>? This will permanently erase the document metadata and its associated vector embeddings. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-3">
+                        <AlertDialogCancel className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-12 px-6">Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={() => handleDeleteDoc(confirmDeleteDoc?._id)}
+                            className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-12 px-6 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Delete Object
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Delete User Confirmation */}
+            <AlertDialog open={!!confirmDeleteUser} onOpenChange={(open) => !open && setConfirmDeleteUser(null)}>
+                <AlertDialogContent className="rounded-[2rem] border-border/50 shadow-2xl bg-card/90 backdrop-blur-2xl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-2xl font-black tracking-tight text-destructive">Terminate User Access?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-base font-medium">
+                            You are about to delete <span className="text-foreground font-bold italic">{confirmDeleteUser?.email}</span>. This will revoke all access privileges and purge their data from the platform.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-3">
+                        <AlertDialogCancel className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-12 px-6">Keep User</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={() => handleDeleteUser(confirmDeleteUser?._id)}
+                            className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-12 px-6 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Confirm Termination
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Toggle Admin Confirmation */}
+            <AlertDialog open={!!confirmToggleAdmin} onOpenChange={(open) => !open && setConfirmToggleAdmin(null)}>
+                <AlertDialogContent className="rounded-[2rem] border-border/50 shadow-2xl bg-card/90 backdrop-blur-2xl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-2xl font-black tracking-tight">Modify Permissions?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-base font-medium">
+                            Are you sure you want to <span className="text-primary font-bold">{confirmToggleAdmin?.actionText}</span> for {confirmToggleAdmin?.user?.email}?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-3">
+                        <AlertDialogCancel className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-12 px-6">Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={handleToggleAdmin}
+                            className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-12 px-6 bg-primary text-primary-foreground hover:bg-primary/90"
+                        >
+                            Apply Change
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

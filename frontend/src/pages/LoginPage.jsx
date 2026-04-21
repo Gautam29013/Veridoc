@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { login, googleLogin } from "@/services/authService";
+import { googleLogin as googleLoginService, login } from "@/services/authService";
 import { Loader2, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/Logo";
 import { useTheme } from "@/context/ThemeContext";
+import { useGoogleLogin } from "@react-oauth/google";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -37,21 +38,37 @@ export default function LoginPage() {
         }
     };
 
-    const handleGoogleLogin = () => {
-        // Placeholder for triggering the actual OAuth flow
-        // In a real app, this would use useGoogleLogin hook from @react-oauth/google
-        console.log("Trigger Google OAuth");
-    };
+    const handleGoogleLogin = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            setError("");
+            setLoading(true);
+            try {
+                const data = await googleLoginService(tokenResponse.access_token);
+                if (data.user?.role === "admin") {
+                    navigate("/admin");
+                } else {
+                    navigate("/dashboard");
+                }
+            } catch (err) {
+                setError(err.response?.data?.detail || "Google authentication failed.");
+            } finally {
+                setLoading(false);
+            }
+        },
+        onError: () => {
+            setError("Google login was cancelled or failed.");
+        },
+    });
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-background p-4 relative overflow-hidden">
             {/* Background Orbs */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/10 blur-[120px] rounded-full" />
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full -z-10" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/10 blur-[120px] rounded-full -z-10" />
 
             <div className="absolute top-6 left-6 z-50">
                 <Link to="/">
-                    <Button variant="ghost" className="flex items-center gap-2 font-bold text-sm text-muted-foreground hover:text-primary transition-all">
+                    <Button variant="ghost" className="flex items-center gap-2 font-medium text-sm text-muted-foreground hover:text-primary transition-all">
                         <ArrowLeft className="h-4 w-4" />
                         Back
                     </Button>
@@ -155,7 +172,7 @@ export default function LoginPage() {
                                     alt="Google" 
                                     className="w-5 h-5 relative z-10"
                                 />
-                                <span className="font-bold text-base relative z-10">Continue with Google</span>
+                                <span className="font-medium text-base relative z-10">Continue with Google</span>
                             </Button>
                         </div>
 
