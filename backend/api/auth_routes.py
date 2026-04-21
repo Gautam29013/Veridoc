@@ -3,7 +3,7 @@ import cloudinary
 import cloudinary.uploader
 from models.schemas import UserCreate, UserLogin, UserResponse, Token, SignupResponse, GoogleLogin, UserUpdate
 from models.database import get_database
-from utils.auth import get_password_hash, verify_password, create_access_token, get_current_user
+from utils.auth import get_password_hash, verify_password, create_access_token, get_current_user, get_admin_user
 from config import GOOGLE_CLIENT_ID, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
 from datetime import datetime
 import uuid
@@ -171,3 +171,45 @@ async def upload_photo(file: UploadFile = File(...), current_user: dict = Depend
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to upload image: {str(e)}"
         )
+
+@router.get("/users", response_model=list[UserResponse])
+async def get_all_users(admin: dict = Depends(get_admin_user)):
+    db = get_database()
+    users = await db.users.find().to_list(1000)
+    return users
+
+@router.delete("/users/{user_id}")
+async def delete_user(user_id: str, admin: dict = Depends(get_admin_user)):
+    db = get_database()
+    
+    # Prevent admin from deleting themselves
+    if user_id == admin["_id"]:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+        
+    result = await db.users.delete_one({"_id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    return {"message": "User deleted successfully"}
+
+@router.patch("/users/{user_id}/role")
+async def update_user_role(user_id: str, role_data: dict, admin: dict = Depends(get_admin_user)):
+    db = get_database()
+    
+    role = role_data.get("role")
+    if role not in ["user", "admin"]:
+        raise HTTPException(status_code=400, detail="Invalid role")
+        
+    # Prevent admin from demoting themselves (optional, but safer)
+    if user_id == admin["_id"] and role != "admin":
+        raise HTTPException(status_code=400, detail="Cannot demote yourself from admin")
+        
+    result = await db.users.update_one(
+        {"_id": user_id},
+        {"$set": {"role": role}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    return {"message": f"User role updated to {role}"}

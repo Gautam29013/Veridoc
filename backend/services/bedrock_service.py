@@ -115,9 +115,17 @@ def get_bedrock_response(question, chat_history=None):
 
     # Early return if no relevant context — saves an LLM call
     if not docs_from_vector_store:
+        if not docs_with_scores:
+            return (
+                "I couldn't find any indexed document content yet. "
+                "Make sure at least one PDF has been uploaded and finished processing before chatting."
+            )
+
+        best_score = max(score for _, score in docs_with_scores)
         return (
-            "I couldn't find any relevant information in the uploaded documents for your question. "
-            "Please make sure the relevant documents have been uploaded and fully processed."
+            "I found uploaded document content, but nothing matched your question closely enough to answer safely. "
+            f"The best similarity score was {best_score:.2f}, below the current threshold of {RELEVANCE_THRESHOLD:.2f}. "
+            "Try asking with words that appear in the document, or lower the retrieval threshold."
         )
 
     # Format context as clean text instead of raw Document __repr__
@@ -165,4 +173,3 @@ def get_bedrock_response(question, chat_history=None):
     response = client.invoke_model(modelId=MODEL_ID, body=json.dumps(ige_native_request))
     result = json.loads(response["body"].read())
     return result["output"]["message"]["content"][0]["text"]
-

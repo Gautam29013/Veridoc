@@ -9,9 +9,17 @@ import { Separator } from "@/components/ui/separator";
 import { Send, Plus, User2, Bot, Sparkles, Paperclip, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/services/api";
+import { getUserRole } from "@/services/authService";
 
 export default function DashboardPage() {
     const navigate = useNavigate();
+    
+    useEffect(() => {
+        if (getUserRole() === "admin") {
+            navigate("/admin");
+        }
+    }, [navigate]);
+
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState("");
     const [activeChatId, setActiveChatId] = useState(null);
@@ -97,6 +105,36 @@ export default function DashboardPage() {
         setActiveChatId(null);
     };
 
+    const handleDeleteChat = async (id) => {
+        try {
+            await api.delete(`/chat/${id}`);
+            if (activeChatId === id) {
+                handleNewChat();
+            }
+            fetchChats();
+        } catch (error) {
+            console.error("Failed to delete chat", error);
+        }
+    };
+
+    const handleRenameChat = async (id, newTitle) => {
+        try {
+            await api.patch(`/chat/${id}`, { title: newTitle });
+            fetchChats();
+        } catch (error) {
+            console.error("Failed to rename chat", error);
+        }
+    };
+
+    const handlePinChat = async (id, isPinned) => {
+        try {
+            await api.patch(`/chat/${id}`, { is_pinned: isPinned });
+            fetchChats();
+        } catch (error) {
+            console.error("Failed to pin/unpin chat", error);
+        }
+    };
+
     const handleSelectChat = async (id) => {
         setActiveChatId(id);
         setMessages([]); // clear current messages while loading
@@ -134,6 +172,9 @@ export default function DashboardPage() {
                 activeChatId={activeChatId}
                 onSelectChat={handleSelectChat}
                 chatHistory={chatHistoryList}
+                onDeleteChat={handleDeleteChat}
+                onRenameChat={handleRenameChat}
+                onPinChat={handlePinChat}
             />
             <SidebarInset className="bg-background flex flex-col h-svh overflow-hidden relative">
                 {/* Header */}
