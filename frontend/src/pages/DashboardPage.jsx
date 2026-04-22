@@ -10,6 +10,8 @@ import { Send, Plus, User2, Bot, Sparkles, Paperclip, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/services/api";
 import { getUserRole } from "@/services/authService";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function DashboardPage() {
     const navigate = useNavigate();
@@ -269,7 +271,16 @@ export default function DashboardPage() {
                                                     ? "bg-primary text-primary-foreground rounded-tr-none shadow-md shadow-primary/10"
                                                     : "bg-muted/30 border border-border/40 rounded-tl-none text-foreground backdrop-blur-sm"
                                             )}>
-                                                {msg.content}
+                                                {msg.role === "user" ? (
+                                                    msg.content
+                                                ) : (
+                                                    <ReactMarkdown 
+                                                        remarkPlugins={[remarkGfm]}
+                                                        className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-muted/50 prose-pre:border prose-pre:border-border/50"
+                                                    >
+                                                        {msg.content}
+                                                    </ReactMarkdown>
+                                                )}
                                             </div>
                                             <span className="text-[10px] text-muted-foreground/60 font-black uppercase tracking-widest px-2">
                                                 {msg.timestamp}
