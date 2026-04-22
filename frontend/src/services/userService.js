@@ -20,3 +20,18 @@ export const uploadProfilePhoto = async (file) => {
     });
     return response.data;
 };
+
+export const getAllUsers = async () => {
+    const response = await api.get("/auth/users");
+    return response.data;
+};
+
+export const deleteUser = async (userId) => {
+    const response = await api.delete(`/auth/users/${userId}`);
+    return response.data;
+};
+
+export const updateUserRole = async (userId, role) => {
+    const response = await api.patch(`/auth/users/${userId}/role`, { role });
+    return response.data;
+};

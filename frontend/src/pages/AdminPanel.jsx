@@ -21,16 +21,56 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { logout } from "@/services/authService";
-import { Upload, FileText, Trash2, ShieldAlert, Loader2, Search, LogOut } from "lucide-react";
+import { 
+    Upload, 
+    FileText, 
+    Trash2, 
+    ShieldAlert, 
+    Loader2, 
+    Search, 
+    LogOut, 
+    Users, 
+    UserPlus, 
+    UserMinus,
+    Mail,
+    MoreHorizontal
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getAllUsers, deleteUser, updateUserRole } from "@/services/userService";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function AdminPanel() {
     const navigate = useNavigate();
     const { toast } = useToast();
     const [user, setUser] = useState(null);
     const [documents, setDocuments] = useState([]);
+    const [users, setUsers] = useState([]);
     const [isUploading, setIsUploading] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+    
+    // Confirmation Dialog States
+    const [confirmDeleteDoc, setConfirmDeleteDoc] = useState(null); // stores doc object
+    const [confirmDeleteUser, setConfirmDeleteUser] = useState(null); // stores user object
+    const [confirmToggleAdmin, setConfirmToggleAdmin] = useState(null); // stores { user, newRole, actionText }
 
     useEffect(() => {
         const verifyAdmin = async () => {
@@ -46,6 +86,7 @@ export default function AdminPanel() {
                 } else {
                     setUser(response.data);
                     fetchDocuments();
+                    fetchUsers();
                 }
             } catch (err) {
                 navigate("/login");
@@ -58,10 +99,27 @@ export default function AdminPanel() {
 
     const fetchDocuments = async () => {
         try {
-            const res = await api.get("/api/v1/documents/list");
+            const res = await api.get("/documents/list");
             setDocuments(res.data.documents || []);
         } catch (err) {
             console.error("Failed to fetch documents", err);
+        }
+    };
+
+    const fetchUsers = async () => {
+        setIsLoadingUsers(true);
+        try {
+            const data = await getAllUsers();
+            setUsers(data);
+        } catch (err) {
+            console.error("Failed to fetch users", err);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to load users list.",
+            });
+        } finally {
+            setIsLoadingUsers(false);
         }
     };
 
@@ -88,15 +146,11 @@ export default function AdminPanel() {
         });
 
         try {
-            const response = await api.post("/api/v1/documents/upload", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+            const response = await api.post("/documents/upload", formData);
             
             toast({
                 title: "Success!",
-                description: `Document indexed successfully into ${response.data.chunks_created} chunks.`,
+                description: response.data.message || "Document uploaded successfully.",
             });
             fetchDocuments();
         } catch (error) {
@@ -112,10 +166,11 @@ export default function AdminPanel() {
         }
     };
 
-    const handleDelete = async (docId) => {
+    const handleDeleteDoc = async (docId) => {
         try {
-            await api.delete(`/api/v1/documents/${docId}`);
+            await api.delete(`/documents/${docId}`);
             setDocuments(documents.filter(doc => doc._id !== docId));
+            setConfirmDeleteDoc(null);
             toast({
                 title: "Document Removed",
                 description: "The document metadata has been removed.",
@@ -125,6 +180,46 @@ export default function AdminPanel() {
                 variant: "destructive",
                 title: "Delete Failed",
                 description: "Could not remove the document.",
+            });
+        }
+    };
+
+    const handleDeleteUser = async (userId) => {
+        try {
+            await deleteUser(userId);
+            const userEmail = confirmDeleteUser?.email;
+            setUsers(users.filter(u => u._id !== userId));
+            setConfirmDeleteUser(null);
+            toast({
+                title: "User Deleted",
+                description: `${userEmail} has been removed.`,
+            });
+        } catch (err) {
+            toast({
+                variant: "destructive",
+                title: "Action Failed",
+                description: err.response?.data?.detail || "Could not delete user.",
+            });
+        }
+    };
+
+    const handleToggleAdmin = async () => {
+        if (!confirmToggleAdmin) return;
+        const { user: u, newRole } = confirmToggleAdmin;
+        
+        try {
+            await updateUserRole(u._id, newRole);
+            setUsers(users.map(user => user._id === u._id ? { ...user, role: newRole } : user));
+            setConfirmToggleAdmin(null);
+            toast({
+                title: "Role Updated",
+                description: `${u.email} is now a ${newRole}.`,
+            });
+        } catch (err) {
+            toast({
+                variant: "destructive",
+                title: "Update Failed",
+                description: err.response?.data?.detail || "Could not update user role.",
             });
         }
     };
@@ -156,131 +251,366 @@ export default function AdminPanel() {
 
     return (
         <div className="min-h-screen bg-background relative flex flex-col">
+            {/* Background Decor */}
+            <div className="absolute top-0 right-0 w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full -z-10" />
+            <div className="absolute bottom-0 left-0 w-[40%] h-[40%] bg-accent/5 blur-[120px] rounded-full -z-10" />
+
             {/* Header */}
-            <header className="border-b bg-muted/30 px-6 py-4 flex items-center justify-between z-10 sticky top-0 backdrop-blur-md">
-                <div className="flex items-center gap-2">
-                    <ShieldAlert className="w-6 h-6 text-primary" />
-                    <h1 className="text-xl font-bold tracking-tight">Veridoc Admin Center</h1>
+            <header className="border-b border-border/50 bg-background/80 px-8 py-5 flex items-center justify-between z-30 sticky top-0 backdrop-blur-xl">
+                <div className="flex items-center gap-4 transition-transform hover:scale-105 cursor-pointer">
+                    <div className="p-2 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+                        <ShieldAlert className="w-5 h-5" />
+                    </div>
+                    <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">Veridoc <span className="text-primary/70">Admin</span></h1>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-6">
                     <ThemeToggle />
-                    <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-destructive flex items-center gap-2">
+                    <div className="h-6 w-[1px] bg-border/50" />
+                    <Button variant="ghost" size="sm" onClick={handleLogout} className="font-bold text-xs uppercase tracking-widest text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all gap-2">
                         <LogOut className="w-4 h-4" />
-                        <span>Logout</span>
+                        <span>Sign Out</span>
                     </Button>
                 </div>
             </header>
 
-            <main className="flex-1 w-full max-w-6xl mx-auto p-6 md:p-12 space-y-12">
-                
-                {/* Upload Section */}
-                <Card className="relative overflow-hidden group border-border shadow-sm rounded-2xl">
-                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <CardHeader className="relative z-10">
-                        <CardTitle className="text-2xl font-bold">Knowledge Base Upload</CardTitle>
-                        <CardDescription className="max-w-xl">
-                            Automatically slice and embed organization documents. Uploading a PDF here instantly writes it to the Vector Database, meaning the AI will immediately start answering based on this new policy.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="relative z-10">
-                        <div className="flex flex-col md:flex-row items-center gap-8">
-                            <div className="flex-1 hidden md:block" />
-                            <div className="shrink-0 relative">
-                                {isUploading && (
-                                    <div className="absolute inset-0 z-20 bg-background/80 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center p-4 text-center">
-                                        <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
-                                        <span className="text-sm font-semibold animate-pulse text-primary px-2">Embedding with Bedrock...</span>
+            <main className="flex-1 w-full max-w-7xl mx-auto p-6 md:p-12 space-y-10">
+                <Tabs defaultValue="documents" className="w-full">
+                    <TabsList className="bg-muted/50 p-1 rounded-2xl mb-8">
+                        <TabsTrigger value="documents" className="rounded-xl px-8 font-bold text-xs uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:shadow-lg">
+                            <FileText className="w-4 h-4 mr-2" />
+                            Knowledge Base
+                        </TabsTrigger>
+                        <TabsTrigger value="users" className="rounded-xl px-8 font-bold text-xs uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:shadow-lg">
+                            <Users className="w-4 h-4 mr-2" />
+                            User Management
+                        </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="documents" className="space-y-16 animate-in fade-in duration-500">
+                        {/* Hero / Upload Section */}
+                        <div className="space-y-10">
+                            <div className="space-y-3">
+                                <h2 className="text-5xl font-black tracking-tight text-foreground/90">Knowledge Base</h2>
+                                <p className="text-muted-foreground/70 text-lg font-medium max-w-2xl">Orchestrate your organization's collective intelligence. Upload PDFs to instantly vectorize and deploy across the RAG pipeline.</p>
+                            </div>
+
+                            <Card className="relative overflow-hidden group border-border/50 shadow-2xl shadow-primary/5 rounded-[2.5rem] bg-card/50 backdrop-blur-sm">
+                                <CardHeader className="p-10 pb-6">
+                                    <CardTitle className="text-3xl font-black tracking-tight">Rapid Ingestion</CardTitle>
+                                    <CardDescription className="text-base font-medium">
+                                        Drag and drop files to start the automated embedding process.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-10 pt-0">
+                                    <div className="flex flex-col md:flex-row items-center gap-12">
+                                        <div className="shrink-0 relative group/upload">
+                                            {isUploading && (
+                                                <div className="absolute inset-0 z-20 bg-background/90 backdrop-blur-md rounded-[2rem] flex flex-col items-center justify-center p-6 text-center shadow-2xl border border-primary/20">
+                                                    <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+                                                    <span className="text-sm font-black uppercase tracking-widest text-primary animate-pulse">Vectorizing...</span>
+                                                </div>
+                                            )}
+                                            <div className="border-[3px] border-dashed border-primary/20 rounded-[2rem] p-10 flex flex-col items-center justify-center text-center bg-primary/5 hover:bg-primary/10 hover:border-primary/40 transition-all w-80 h-56 cursor-pointer relative group-hover/upload:scale-[1.02]">
+                                                <div className="p-5 rounded-2xl bg-primary/10 text-primary mb-4 shadow-inner">
+                                                    <Upload className="w-10 h-10" />
+                                                </div>
+                                                <span className="font-black text-sm uppercase tracking-widest">Select PDF File</span>
+                                                <span className="text-[10px] font-bold text-muted-foreground/50 mt-2 uppercase tracking-tight">Max Size: 50MB</span>
+                                                <input 
+                                                    type="file" 
+                                                    accept=".pdf"
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                    onChange={handleFileUpload}
+                                                    disabled={isUploading}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 space-y-6">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div className="p-4 rounded-2xl bg-background/50 border border-border/50">
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Embedding Engine</p>
+                                                    <p className="text-sm font-bold">AWS Bedrock (Titan V2)</p>
+                                                </div>
+                                                <div className="p-4 rounded-2xl bg-background/50 border border-border/50">
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Vector Store</p>
+                                                    <p className="text-sm font-bold">ChromaDB / AWS OpenSearch</p>
+                                                </div>
+                                            </div>
+                                            <p className="text-xs font-medium text-muted-foreground/60 leading-relaxed italic">
+                                                Note: All documents are automatically chunked with a 10% overlap to preserve semantic context during retrieval.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Documents Table Section */}
+                        <section className="space-y-6">
+                            <div className="flex items-center justify-between px-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-accent/10 text-accent">
+                                        <FileText className="w-5 h-5" />
+                                    </div>
+                                    <h3 className="text-xl font-black tracking-tight">Active Repositories</h3>
+                                </div>
+                                <Badge variant="outline" className="px-4 py-1 rounded-full font-bold text-[10px] uppercase tracking-widest bg-muted/20 border-border/50">
+                                    {documents.length} Indexed Objects
+                                </Badge>
+                            </div>
+
+                            <Card className="rounded-[2rem] overflow-hidden border-border/50 shadow-2xl shadow-primary/5 bg-card/50 backdrop-blur-sm">
+                                {documents.length === 0 ? (
+                                    <div className="p-24 text-center flex flex-col items-center justify-center text-muted-foreground/30">
+                                        <div className="p-6 rounded-3xl bg-muted/20 mb-6">
+                                            <Search className="w-16 h-16 opacity-20" />
+                                        </div>
+                                        <p className="font-black text-xl text-muted-foreground/50 uppercase tracking-tighter">Repository Empty</p>
+                                        <p className="text-sm font-medium opacity-70 mt-2">Initialize your knowledge base by uploading a PDF.</p>
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <Table>
+                                            <TableHeader className="bg-muted/40 border-b border-border/50">
+                                                <TableRow className="hover:bg-transparent">
+                                                    <TableHead className="w-[40%] px-8 h-16 font-black uppercase text-[10px] tracking-widest">Document Registry</TableHead>
+                                                    <TableHead className="px-8 h-16 font-black uppercase text-[10px] tracking-widest">Ingestion Date</TableHead>
+                                                    <TableHead className="px-8 h-16 font-black uppercase text-[10px] tracking-widest">Pipeline Status</TableHead>
+                                                    <TableHead className="px-8 h-16 font-black uppercase text-[10px] tracking-widest text-center">Vectors</TableHead>
+                                                    <TableHead className="px-8 h-16 font-black uppercase text-[10px] tracking-widest text-right">Actions</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {documents.map((doc) => (
+                                                    <TableRow key={doc._id} className="transition-all hover:bg-muted/20 border-b border-border/20 group">
+                                                        <TableCell className="px-8 py-6 font-bold text-base max-w-[300px] truncate" title={doc.filename}>
+                                                            {doc.filename}
+                                                        </TableCell>
+                                                        <TableCell className="px-8 py-6 text-sm font-medium text-muted-foreground/70">
+                                                            {new Date(doc.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                        </TableCell>
+                                                        <TableCell className="px-8 py-6">
+                                                            <Badge variant="default" className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 font-bold uppercase text-[9px] tracking-widest px-3 py-1 rounded-full border border-emerald-500/20">
+                                                                Live In RAG
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="px-8 py-6 text-center font-mono font-black text-xs text-primary/70">
+                                                            {doc.chunk_count}
+                                                        </TableCell>
+                                                        <TableCell className="px-8 py-6 text-right">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button variant="ghost" className="h-10 w-10 p-0 rounded-xl hover:bg-muted transition-all">
+                                                                        <span className="sr-only">Open menu</span>
+                                                                        <MoreHorizontal className="h-5 w-5" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end" className="rounded-xl border-border/50 shadow-xl min-w-[160px]">
+                                                                    <DropdownMenuLabel className="font-black uppercase text-[10px] tracking-widest text-muted-foreground/50">Actions</DropdownMenuLabel>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem 
+                                                                        onClick={() => setConfirmDeleteDoc(doc)}
+                                                                        className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer font-bold gap-2 py-3"
+                                                                    >
+                                                                        <Trash2 className="w-4 h-4" />
+                                                                        Delete Document
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
                                     </div>
                                 )}
-                                <div className="border-2 border-dashed border-primary/40 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-primary/5 hover:bg-primary/10 transition-colors w-72 h-44 cursor-pointer relative">
-                                    <Upload className="w-8 h-8 text-primary mb-3" />
-                                    <span className="font-semibold text-sm">Select PDF File</span>
-                                    <span className="text-xs text-muted-foreground mt-1">.pdf files only</span>
-                                    <input 
-                                        type="file" 
-                                        accept=".pdf"
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                        onChange={handleFileUpload}
-                                        disabled={isUploading}
-                                    />
-                                </div>
-                            </div>
+                            </Card>
+                        </section>
+                    </TabsContent>
+
+                    <TabsContent value="users" className="space-y-10 animate-in fade-in duration-500">
+                        <div className="space-y-3">
+                            <h2 className="text-5xl font-black tracking-tight text-foreground/90">User Directory</h2>
+                            <p className="text-muted-foreground/70 text-lg font-medium max-w-2xl">Manage access levels and oversee user accounts across the platform.</p>
                         </div>
-                    </CardContent>
-                </Card>
 
-                {/* Documents Table Section */}
-                <section className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-muted-foreground" />
-                        <h3 className="text-lg font-semibold">Indexed Documents Snapshot</h3>
-                    </div>
-
-                    <Card className="rounded-xl overflow-hidden border-border bg-card">
-                        {documents.length === 0 ? (
-                            <div className="p-12 text-center flex flex-col items-center justify-center text-muted-foreground">
-                                <Search className="w-10 h-10 mb-3 opacity-20" />
-                                <p className="font-medium">No documents dynamically indexed yet.</p>
-                                <p className="text-sm opacity-70">Upload your first PDF via the panel above.</p>
-                            </div>
-                        ) : (
-                            <Table>
-                                <TableHeader className="bg-muted/50">
-                                    <TableRow>
-                                        <TableHead className="w-[40%] px-6">Filename</TableHead>
-                                        <TableHead className="px-6">Upload Date</TableHead>
-                                        <TableHead className="px-6">Status</TableHead>
-                                        <TableHead className="px-6 text-center">AI Chunks</TableHead>
-                                        <TableHead className="px-6 text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {documents.map((doc) => (
-                                        <TableRow key={doc._id} className="transition-colors">
-                                            <TableCell className="px-6 py-4 font-medium max-w-[300px] truncate" title={doc.filename}>
-                                                {doc.filename}
-                                            </TableCell>
-                                            <TableCell className="px-6 py-4 text-muted-foreground">
-                                                {new Date(doc.created_at).toLocaleDateString()}
-                                            </TableCell>
-                                            <TableCell className="px-6 py-4">
-                                                <Badge variant="default" className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 capitalize">
-                                                    Indexed
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="px-6 py-4 text-center font-mono text-muted-foreground">
-                                                {doc.chunk_count}
-                                            </TableCell>
-                                            <TableCell className="px-6 py-4 text-right">
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon" 
-                                                    onClick={() => handleDelete(doc._id)} 
-                                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        )}
-                    </Card>
-                </section>
+                        <Card className="rounded-[2.5rem] overflow-hidden border-border/50 shadow-2xl shadow-primary/5 bg-card/50 backdrop-blur-sm">
+                            {isLoadingUsers ? (
+                                <div className="p-24 space-y-4">
+                                    <Skeleton className="h-12 w-full" />
+                                    <Skeleton className="h-12 w-full" />
+                                    <Skeleton className="h-12 w-full" />
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader className="bg-muted/40 border-b border-border/50">
+                                            <TableRow className="hover:bg-transparent">
+                                                <TableHead className="px-8 h-16 font-black uppercase text-[10px] tracking-widest">User Profile</TableHead>
+                                                <TableHead className="px-8 h-16 font-black uppercase text-[10px] tracking-widest">Role</TableHead>
+                                                <TableHead className="px-8 h-16 font-black uppercase text-[10px] tracking-widest">Joined Date</TableHead>
+                                                <TableHead className="px-8 h-16 font-black uppercase text-[10px] tracking-widest text-right">Administrative Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {users.map((u) => (
+                                                <TableRow key={u._id} className="transition-all hover:bg-muted/20 border-b border-border/20 group">
+                                                    <TableCell className="px-8 py-6">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black overflow-hidden border border-primary/20">
+                                                                {u.picture_url ? (
+                                                                    <img src={u.picture_url} alt={u.full_name} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    u.full_name?.charAt(0) || u.email.charAt(0).toUpperCase()
+                                                                )}
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="font-bold text-base">{u.full_name || "Unidentified User"}</span>
+                                                                <span className="text-xs text-muted-foreground/60 flex items-center gap-1">
+                                                                    <Mail className="w-3 h-3" />
+                                                                    {u.email}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="px-8 py-6">
+                                                        <Badge variant={u.role === "admin" ? "default" : "secondary"} className={`font-black uppercase text-[9px] tracking-widest px-3 py-1 rounded-full border ${u.role === "admin" ? "bg-primary text-primary-foreground border-primary/20" : "bg-muted text-muted-foreground border-border/50"}`}>
+                                                            {u.role}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="px-8 py-6 text-sm font-medium text-muted-foreground/70">
+                                                        {new Date(u.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                    </TableCell>
+                                                    <TableCell className="px-8 py-6 text-right">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" className="h-10 w-10 p-0 rounded-xl hover:bg-muted transition-all" disabled={u._id === user?._id}>
+                                                                    <span className="sr-only">Open menu</span>
+                                                                    <MoreHorizontal className="h-5 w-5" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" className="rounded-xl border-border/50 shadow-xl min-w-[200px]">
+                                                                <DropdownMenuLabel className="font-black uppercase text-[10px] tracking-widest text-muted-foreground/50">User Actions</DropdownMenuLabel>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem 
+                                                                    onClick={() => {
+                                                                        const newRole = u.role === "admin" ? "user" : "admin";
+                                                                        const actionText = newRole === "admin" ? "promote to admin" : "demote to user";
+                                                                        setConfirmToggleAdmin({ user: u, newRole, actionText });
+                                                                    }}
+                                                                    className="cursor-pointer font-bold gap-2 py-3"
+                                                                >
+                                                                    {u.role === "admin" ? (
+                                                                        <><UserMinus className="w-4 h-4" /> Demote to User</>
+                                                                    ) : (
+                                                                        <><UserPlus className="w-4 h-4" /> Make Admin</>
+                                                                    )}
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem 
+                                                                    onClick={() => setConfirmDeleteUser(u)}
+                                                                    className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer font-bold gap-2 py-3"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                    Delete Account
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            )}
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </main>
             
             {isUploading && (
-               <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm">
-                   <Card className="p-8 rounded-2xl shadow-2xl flex flex-col items-center border border-border/50 max-w-sm w-full mx-4 bg-card">
-                       <Loader2 className="w-12 h-12 animate-spin text-primary mb-6" />
-                       <h3 className="font-bold text-lg mb-2">Processing Document</h3>
-                       <p className="text-sm text-muted-foreground text-center leading-relaxed">
-                           Please wait while AWS Bedrock reads, splits, and embeds your document into the ChromaDB vector store.
+               <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-xl animate-in fade-in duration-500">
+                   <Card className="p-12 rounded-[3rem] shadow-2xl flex flex-col items-center border-border/50 max-w-md w-full mx-6 bg-card/50 backdrop-blur-2xl">
+                       <div className="relative mb-10">
+                           <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse" />
+                           <Loader2 className="w-20 h-20 animate-spin text-primary relative z-10" />
+                       </div>
+                       <h3 className="font-black text-3xl mb-4 tracking-tighter">Orchestrating Intelligence</h3>
+                       <p className="text-base font-medium text-muted-foreground/70 text-center leading-relaxed">
+                           AWS Bedrock is currently distilling and embedding your document into our high-dimensional vector space. 
                        </p>
+                       <div className="mt-10 flex gap-2">
+                           <div className="w-2 h-2 rounded-full bg-primary animate-bounce delay-0" />
+                           <div className="w-2 h-2 rounded-full bg-primary animate-bounce delay-150" />
+                           <div className="w-2 h-2 rounded-full bg-primary animate-bounce delay-300" />
+                       </div>
                    </Card>
                </div> 
             )}
+
+            {/* Confirmation Dialogs */}
+            
+            {/* Delete Document Confirmation */}
+            <AlertDialog open={!!confirmDeleteDoc} onOpenChange={(open) => !open && setConfirmDeleteDoc(null)}>
+                <AlertDialogContent className="rounded-[2rem] border-border/50 shadow-2xl bg-card/90 backdrop-blur-2xl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-2xl font-black tracking-tight">Delete Knowledge Object?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-base font-medium">
+                            Are you sure you want to remove <span className="text-foreground font-bold italic">"{confirmDeleteDoc?.filename}"</span>? This will permanently erase the document metadata and its associated vector embeddings. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-3">
+                        <AlertDialogCancel className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-12 px-6">Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={() => handleDeleteDoc(confirmDeleteDoc?._id)}
+                            className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-12 px-6 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Delete Object
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Delete User Confirmation */}
+            <AlertDialog open={!!confirmDeleteUser} onOpenChange={(open) => !open && setConfirmDeleteUser(null)}>
+                <AlertDialogContent className="rounded-[2rem] border-border/50 shadow-2xl bg-card/90 backdrop-blur-2xl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-2xl font-black tracking-tight text-destructive">Terminate User Access?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-base font-medium">
+                            You are about to delete <span className="text-foreground font-bold italic">{confirmDeleteUser?.email}</span>. This will revoke all access privileges and purge their data from the platform.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-3">
+                        <AlertDialogCancel className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-12 px-6">Keep User</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={() => handleDeleteUser(confirmDeleteUser?._id)}
+                            className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-12 px-6 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Confirm Termination
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Toggle Admin Confirmation */}
+            <AlertDialog open={!!confirmToggleAdmin} onOpenChange={(open) => !open && setConfirmToggleAdmin(null)}>
+                <AlertDialogContent className="rounded-[2rem] border-border/50 shadow-2xl bg-card/90 backdrop-blur-2xl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-2xl font-black tracking-tight">Modify Permissions?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-base font-medium">
+                            Are you sure you want to <span className="text-primary font-bold">{confirmToggleAdmin?.actionText}</span> for {confirmToggleAdmin?.user?.email}?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-3">
+                        <AlertDialogCancel className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-12 px-6">Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={handleToggleAdmin}
+                            className="rounded-xl font-bold uppercase text-[10px] tracking-widest h-12 px-6 bg-primary text-primary-foreground hover:bg-primary/90"
+                        >
+                            Apply Change
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

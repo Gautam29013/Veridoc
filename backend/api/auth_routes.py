@@ -3,7 +3,7 @@ import cloudinary
 import cloudinary.uploader
 from models.schemas import UserCreate, UserLogin, UserResponse, Token, SignupResponse, GoogleLogin, UserUpdate
 from models.database import get_database
-from utils.auth import get_password_hash, verify_password, create_access_token, get_current_user
+from utils.auth import get_password_hash, verify_password, create_access_token, get_current_user, get_admin_user
 from config import GOOGLE_CLIENT_ID, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
 from datetime import datetime
 import uuid
@@ -71,12 +71,28 @@ async def login(user_data: UserLogin):
 @router.post("/google", response_model=SignupResponse)
 async def google_auth(data: GoogleLogin):
     try:
-        # Verify the Google token
-        idinfo = id_token.verify_oauth2_token(data.token, requests.Request(), GOOGLE_CLIENT_ID)
-        
-        email = idinfo['email']
-        full_name = idinfo.get('name')
-        picture_url = idinfo.get('picture')
+        # Try verifying as an ID Token first
+        try:
+            idinfo = id_token.verify_oauth2_token(data.token, requests.Request(), GOOGLE_CLIENT_ID)
+            email = idinfo['email']
+            full_name = idinfo.get('name')
+            picture_url = idinfo.get('picture')
+        except Exception:
+            # If ID token verification fails, try as an Access Token
+            import requests as py_requests
+            response = py_requests.get(
+                f"https://www.googleapis.com/oauth2/v3/userinfo?access_token={data.token}"
+            )
+            if response.status_code != 200:
+                raise ValueError("Invalid Google token")
+            
+            idinfo = response.json()
+            email = idinfo.get('email')
+            full_name = idinfo.get('name')
+            picture_url = idinfo.get('picture')
+
+        if not email:
+            raise ValueError("Email not found in Google token")
         
         db = get_database()
         
@@ -96,11 +112,16 @@ async def google_auth(data: GoogleLogin):
             }
             await db.users.insert_one(user)
         else:
-            # Update picture if it's missing or changed
-            await db.users.update_one(
-                {"email": email},
-                {"$set": {"picture_url": picture_url, "full_name": full_name}}
-            )
+            # Update info if it's missing or changed
+            update_fields = {}
+            if full_name: update_fields["full_name"] = full_name
+            if picture_url: update_fields["picture_url"] = picture_url
+            
+            if update_fields:
+                await db.users.update_one(
+                    {"email": email},
+                    {"$set": update_fields}
+                )
             user = await db.users.find_one({"email": email})
         
         access_token = create_access_token(data={"sub": email})
@@ -110,7 +131,8 @@ async def google_auth(data: GoogleLogin):
             "access_token": access_token,
             "token_type": "bearer"
         }
-    except ValueError:
+    except Exception as e:
+        print(f"Google Auth Error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid Google token"
@@ -171,3 +193,45 @@ async def upload_photo(file: UploadFile = File(...), current_user: dict = Depend
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to upload image: {str(e)}"
         )
+
+@router.get("/users", response_model=list[UserResponse])
+async def get_all_users(admin: dict = Depends(get_admin_user)):
+    db = get_database()
+    users = await db.users.find().to_list(1000)
+    return users
+
+@router.delete("/users/{user_id}")
+async def delete_user(user_id: str, admin: dict = Depends(get_admin_user)):
+    db = get_database()
+    
+    # Prevent admin from deleting themselves
+    if user_id == admin["_id"]:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+        
+    result = await db.users.delete_one({"_id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    return {"message": "User deleted successfully"}
+
+@router.patch("/users/{user_id}/role")
+async def update_user_role(user_id: str, role_data: dict, admin: dict = Depends(get_admin_user)):
+    db = get_database()
+    
+    role = role_data.get("role")
+    if role not in ["user", "admin"]:
+        raise HTTPException(status_code=400, detail="Invalid role")
+        
+    # Prevent admin from demoting themselves (optional, but safer)
+    if user_id == admin["_id"] and role != "admin":
+        raise HTTPException(status_code=400, detail="Cannot demote yourself from admin")
+        
+    result = await db.users.update_one(
+        {"_id": user_id},
+        {"$set": {"role": role}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    return {"message": f"User role updated to {role}"}
