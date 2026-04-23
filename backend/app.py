@@ -26,11 +26,13 @@ app.add_middleware(
 
 from api.query_routes import router as query_router
 from api.document_routes import router as document_router
+from api.audio_routes import router as audio_router
 
 # Include routers
 app.include_router(auth_router)
 app.include_router(query_router)
 app.include_router(document_router)
+app.include_router(audio_router)
 
 @app.get("/")
 async def root():
