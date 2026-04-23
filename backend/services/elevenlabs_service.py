@@ -61,4 +61,25 @@ class ElevenLabsService:
             logger.error(f"Error in ElevenLabs transcribe_audio: {e}")
             raise
 
+    async def get_signed_url(self, agent_id: str) -> str:
+        """
+        Gets a signed URL for a Conversational AI session.
+        """
+        if not self.client:
+            raise ValueError("ElevenLabs Client not initialized.")
+
+        try:
+            # We use the requests library since the SDK might not have a direct helper for this specific endpoint yet
+            import requests
+            url = f"https://api.elevenlabs.io/v1/convai/conversation/get_signed_url?agent_id={agent_id}"
+            headers = {"xi-api-key": ELEVENLABS_API_KEY}
+            
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            
+            return response.json().get("signed_url")
+        except Exception as e:
+            logger.error(f"Error getting signed URL: {e}")
+            raise
+
 elevenlabs_service = ElevenLabsService()

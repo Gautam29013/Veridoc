@@ -63,8 +63,13 @@ class AudioService {
         const audio = new Audio();
         audio.src = audioUrl;
         
+        // Revoke the object URL when audio finishes to avoid memory leaks
+        audio.addEventListener("ended", () => URL.revokeObjectURL(audioUrl), { once: true });
+
         return new Promise((resolve, reject) => {
             audio.oncanplaythrough = async () => {
+                // Prevent this handler from firing multiple times
+                audio.oncanplaythrough = null;
                 try {
                     await audio.play();
                     console.log("Audio playing started");
@@ -76,6 +81,7 @@ class AudioService {
             };
             audio.onerror = (err) => {
                 console.error("Audio error:", err);
+                URL.revokeObjectURL(audioUrl);
                 reject(err);
             };
         });

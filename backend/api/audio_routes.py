@@ -53,3 +53,17 @@ async def text_to_speech(data: Dict[str, str]):
         return Response(content=audio_content, media_type=mime_type)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/signed-url")
+async def get_signed_url(agent_id: str):
+    """
+    Returns a signed URL for ElevenLabs Conversational AI.
+    """
+    if not agent_id:
+        raise HTTPException(status_code=400, detail="agent_id is required.")
+    
+    try:
+        url = await elevenlabs_service.get_signed_url(agent_id)
+        return {"signed_url": url}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

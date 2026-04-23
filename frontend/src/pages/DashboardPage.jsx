@@ -13,7 +13,7 @@ import audioService from "@/services/audioService";
 import { getUserRole } from "@/services/authService";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
+import LiveMode from "@/components/LiveMode";
 export default function DashboardPage() {
     const navigate = useNavigate();
     
@@ -34,6 +34,8 @@ export default function DashboardPage() {
     const [isRecording, setIsRecording] = useState(false);
 
     const [speakingMessageId, setSpeakingMessageId] = useState(null);
+    const [isLiveModeOpen, setIsLiveModeOpen] = useState(false);
+    const [agentId, setAgentId] = useState(""); // This should be fetched from config or env via API
 
     const fetchChats = async () => {
         try {
@@ -46,6 +48,17 @@ export default function DashboardPage() {
 
     useEffect(() => {
         fetchChats();
+        // Fetch Agent ID (or we can just hardcode it for now if we want, but better to fetch from backend)
+        const fetchConfig = async () => {
+            try {
+                // Assuming we add a /config endpoint or just use env
+                // For now, I'll assume it's in the environment or I'll provide a way to set it
+                // setAgentId("..."); 
+            } catch (error) {
+                console.error("Failed to fetch config", error);
+            }
+        };
+        fetchConfig();
     }, []);
 
     const handleLogout = () => {
@@ -231,6 +244,15 @@ export default function DashboardPage() {
                             <Sparkles className="h-3 w-3 mr-2 text-primary" />
                             Premium Access
                         </div>
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setIsLiveModeOpen(true)}
+                            className="rounded-full bg-primary/10 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all duration-500 font-bold"
+                        >
+                            <Mic className="h-4 w-4 mr-2" />
+                            Go Live
+                        </Button>
                         <ThemeToggle />
                     </div>
                 </header>
@@ -442,6 +464,13 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </SidebarInset>
+
+            <LiveMode 
+                isOpen={isLiveModeOpen} 
+                onClose={() => setIsLiveModeOpen(false)} 
+                activeChatId={activeChatId}
+                onChatIdReceived={setActiveChatId}
+            />
         </SidebarProvider>
     );
 }
