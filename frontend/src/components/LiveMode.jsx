@@ -3,6 +3,8 @@ import { X, Mic, MicOff, Loader2, Sparkles, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/services/api";
 import audioService from "@/services/audioService";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const LiveMode = ({ isOpen, onClose, activeChatId, onChatIdReceived }) => {
     const [status, setStatus] = useState("idle"); // idle, listening, thinking, speaking, error
@@ -59,6 +61,8 @@ const LiveMode = ({ isOpen, onClose, activeChatId, onChatIdReceived }) => {
     const processAudioBlob = useCallback(async (audioBlob) => {
         setStatus("thinking");
         setUserTranscript("Transcribing...");
+        setBotCaption(""); // Clear previous bot response when starting new one
+        setErrorMsg("");
 
         try {
             // 1. STT via backend ElevenLabs
@@ -147,11 +151,8 @@ const LiveMode = ({ isOpen, onClose, activeChatId, onChatIdReceived }) => {
                 setHighlightIndex(words.length);
             }
 
-            // Done speaking — brief pause to show full highlight, then reset
-            await new Promise(r => setTimeout(r, 600));
+            // Done speaking — return to idle/listening but KEEP the text visible
             setStatus("idle");
-            setUserTranscript("");
-            setBotCaption("");
             setHighlightIndex(-1);
             isProcessingRef.current = false;
             return true;
@@ -415,9 +416,13 @@ const LiveMode = ({ isOpen, onClose, activeChatId, onChatIdReceived }) => {
                                                 {word}{" "}
                                             </span>
                                         ))
-                                    ) : (
-                                        <span className="text-primary">{botCaption}</span>
-                                    )}
+                                    ) : botCaption ? (
+                                        <div className="prose prose-sm dark:prose-invert max-w-none text-left prose-p:leading-relaxed prose-headings:mb-2 prose-headings:mt-4">
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                {botCaption}
+                                            </ReactMarkdown>
+                                        </div>
+                                    ) : null}
                                 </div>
                             </div>
                         </div>
