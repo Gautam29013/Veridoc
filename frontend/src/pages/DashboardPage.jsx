@@ -274,12 +274,11 @@ export default function DashboardPage() {
                                                 {msg.role === "user" ? (
                                                     msg.content
                                                 ) : (
-                                                    <ReactMarkdown 
-                                                        remarkPlugins={[remarkGfm]}
-                                                        className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-muted/50 prose-pre:border prose-pre:border-border/50"
-                                                    >
-                                                        {msg.content}
-                                                    </ReactMarkdown>
+                                                    <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-muted/50 prose-pre:border prose-pre:border-border/50">
+                                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                            {msg.content}
+                                                        </ReactMarkdown>
+                                                    </div>
                                                 )}
                                             </div>
                                             <span className="text-[10px] text-muted-foreground/60 font-black uppercase tracking-widest px-2">
