@@ -169,6 +169,7 @@ dependencies = [
     { name = "boto3" },
     { name = "cloudinary" },
     { name = "dnspython" },
+    { name = "elevenlabs" },
     { name = "email-validator" },
     { name = "fastapi" },
     { name = "google-auth" },
@@ -193,6 +194,7 @@ requires-dist = [
     { name = "boto3", specifier = ">=1.42.82" },
     { name = "cloudinary", specifier = ">=1.44.1" },
     { name = "dnspython", specifier = ">=2.8.0" },
+    { name = "elevenlabs", specifier = ">=2.44.0" },
     { name = "email-validator", specifier = ">=2.3.0" },
     { name = "fastapi", specifier = ">=0.131.0" },
     { name = "google-auth", specifier = ">=2.48.0" },
@@ -626,6 +628,23 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/9d/a4/e44218c2b394e31a6dd0d6b095c4e1f32d0be54c2a4b250032d717647bab/durationpy-0.10.tar.gz", hash = "sha256:1fa6893409a6e739c9c72334fc65cca1f355dbdd93405d30f726deb5bde42fba", size = 3335, upload-time = "2025-05-17T13:52:37.26Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b0/0d/9feae160378a3553fa9a339b0e9c1a048e147a4127210e286ef18b730f03/durationpy-0.10-py3-none-any.whl", hash = "sha256:3b41e1b601234296b4fb368338fdcd3e13e0b4fb5b67345948f4f2bf9868b286", size = 3922, upload-time = "2025-05-17T13:52:36.463Z" },
+]
+
+[[package]]
+name = "elevenlabs"
+version = "2.44.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "pydantic-core" },
+    { name = "requests" },
+    { name = "typing-extensions" },
+    { name = "websockets" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a8/ea/e6283ef10e1e6d13639e80c5ac562c49cd932626c8d7b3a6f18d83aeb8e0/elevenlabs-2.44.0.tar.gz", hash = "sha256:1e061032aadbfed8e435ec1c5986bcf09937f921c7ef02d3750a55fba4be051a", size = 551614, upload-time = "2026-04-21T11:00:49.98Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/83/3c/0f637dbfb61bbe3491accd31e430b0dcfcc7d77377d2c58980d6fe50fdab/elevenlabs-2.44.0-py3-none-any.whl", hash = "sha256:289ba6cdcdd2f809e1e3f18571a273aa5bad4ccff8070d4c2830798695c058fe", size = 1513401, upload-time = "2026-04-21T11:00:47.855Z" },
 ]
 
 [[package]]
