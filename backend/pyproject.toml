@@ -24,4 +24,6 @@ dependencies = [
     "langchain",
     "langchain-community",
     "langchain-chroma",
+    "google-genai>=1.73.1",
+    "elevenlabs>=2.44.0",
 ]
