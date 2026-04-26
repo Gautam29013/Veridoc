@@ -6,13 +6,14 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Separator } from "@/components/ui/separator";
-import { Send, Plus, User2, Bot, Sparkles, Paperclip, Mic } from "lucide-react";
+import { Send, Plus, User2, Bot, Sparkles, Paperclip, Mic, Volume2, Square, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/services/api";
+import audioService from "@/services/audioService";
 import { getUserRole } from "@/services/authService";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
+import LiveMode from "@/components/LiveMode";
 export default function DashboardPage() {
     const navigate = useNavigate();
     
@@ -30,6 +31,11 @@ export default function DashboardPage() {
 
     const [isLoading, setIsLoading] = useState(false);
     const [isFetchingHistory, setIsFetchingHistory] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
+
+    const [speakingMessageId, setSpeakingMessageId] = useState(null);
+    const [isLiveModeOpen, setIsLiveModeOpen] = useState(false);
+    const [agentId, setAgentId] = useState(""); // This should be fetched from config or env via API
 
     const fetchChats = async () => {
         try {
@@ -42,6 +48,17 @@ export default function DashboardPage() {
 
     useEffect(() => {
         fetchChats();
+        // Fetch Agent ID (or we can just hardcode it for now if we want, but better to fetch from backend)
+        const fetchConfig = async () => {
+            try {
+                // Assuming we add a /config endpoint or just use env
+                // For now, I'll assume it's in the environment or I'll provide a way to set it
+                // setAgentId("..."); 
+            } catch (error) {
+                console.error("Failed to fetch config", error);
+            }
+        };
+        fetchConfig();
     }, []);
 
     const handleLogout = () => {
@@ -161,6 +178,42 @@ export default function DashboardPage() {
         }
     };
 
+    const handleVoiceInput = async () => {
+        if (isRecording) {
+            try {
+                const audioBlob = await audioService.stopRecording();
+                setIsRecording(false);
+                setIsLoading(true);
+                const text = await audioService.transcribe(audioBlob);
+                setInputValue(text);
+            } catch (error) {
+                console.error("Transcription failed", error);
+            } finally {
+                setIsLoading(false);
+            }
+        } else {
+            try {
+                await audioService.startRecording();
+                setIsRecording(true);
+            } catch (error) {
+                console.error("Failed to start recording", error);
+            }
+        }
+    };
+
+
+
+    const handleSpeakMessage = async (id, text) => {
+        try {
+            setSpeakingMessageId(id);
+            await audioService.speak(text);
+        } catch (error) {
+            console.error("TTS failed", error);
+        } finally {
+            setSpeakingMessageId(null);
+        }
+    };
+
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -191,6 +244,15 @@ export default function DashboardPage() {
                             <Sparkles className="h-3 w-3 mr-2 text-primary" />
                             Premium Access
                         </div>
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setIsLiveModeOpen(true)}
+                            className="rounded-full bg-primary/10 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all duration-500 font-bold"
+                        >
+                            <Mic className="h-4 w-4 mr-2" />
+                            Go Live
+                        </Button>
                         <ThemeToggle />
                     </div>
                 </header>
@@ -266,7 +328,7 @@ export default function DashboardPage() {
                                             msg.role === "user" ? "items-end" : "items-start"
                                         )}>
                                             <div className={cn(
-                                                "px-5 py-4 rounded-[1.5rem] text-[16px] leading-relaxed shadow-sm font-medium",
+                                                "px-5 py-4 rounded-[1.5rem] text-[16px] leading-relaxed shadow-sm font-medium relative group/msg",
                                                 msg.role === "user"
                                                     ? "bg-primary text-primary-foreground rounded-tr-none shadow-md shadow-primary/10"
                                                     : "bg-muted/30 border border-border/40 rounded-tl-none text-foreground backdrop-blur-sm"
@@ -274,11 +336,28 @@ export default function DashboardPage() {
                                                 {msg.role === "user" ? (
                                                     msg.content
                                                 ) : (
-                                                    <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-muted/50 prose-pre:border prose-pre:border-border/50">
-                                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                                            {msg.content}
-                                                        </ReactMarkdown>
-                                                    </div>
+                                                    <>
+                                                        <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-muted/50 prose-pre:border prose-pre:border-border/50">
+                                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                                {msg.content}
+                                                            </ReactMarkdown>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => handleSpeakMessage(msg.id, msg.content)}
+                                                            disabled={speakingMessageId !== null}
+                                                            className={cn(
+                                                                "absolute -right-10 top-2 p-2 rounded-xl bg-muted/50 text-muted-foreground transition-all",
+                                                                speakingMessageId === msg.id ? "opacity-100 text-primary" : "opacity-0 group-hover/msg:opacity-100 hover:text-primary hover:bg-primary/10"
+                                                            )}
+                                                            title="Read aloud"
+                                                        >
+                                                            {speakingMessageId === msg.id ? (
+                                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                            ) : (
+                                                                <Volume2 className="h-4 w-4" />
+                                                            )}
+                                                        </button>
+                                                    </>
                                                 )}
                                             </div>
                                             <span className="text-[10px] text-muted-foreground/60 font-black uppercase tracking-widest px-2">
@@ -339,9 +418,26 @@ export default function DashboardPage() {
                                     }}
                                 />
                                 <div className="flex items-center gap-2 pr-1 pb-1">
-                                    <button className="p-3 text-muted-foreground/60 hover:text-primary transition-colors hidden md:block">
-                                        <Mic className="h-5 w-5" />
+
+                                    <button 
+                                        onClick={handleVoiceInput}
+                                        disabled={isLoading}
+                                        className={cn(
+                                            "p-3 rounded-xl transition-all duration-300",
+                                            isRecording 
+                                                ? "bg-red-500/10 text-red-500 animate-pulse" 
+                                                : "text-muted-foreground/60 hover:text-primary"
+                                        )}
+                                    >
+                                        {isLoading && !inputValue ? (
+                                            <Loader2 className="h-5 w-5 animate-spin" />
+                                        ) : isRecording ? (
+                                            <Square className="h-5 w-5 fill-current" />
+                                        ) : (
+                                            <Mic className="h-5 w-5" />
+                                        )}
                                     </button>
+
                                     <Button
                                         size="icon"
                                         onClick={handleSendMessage}
@@ -368,6 +464,13 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </SidebarInset>
+
+            <LiveMode 
+                isOpen={isLiveModeOpen} 
+                onClose={() => setIsLiveModeOpen(false)} 
+                activeChatId={activeChatId}
+                onChatIdReceived={setActiveChatId}
+            />
         </SidebarProvider>
     );
 }
